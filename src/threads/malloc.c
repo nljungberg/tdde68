@@ -9,6 +9,8 @@
 #include "threads/synch.h"
 #include "threads/vaddr.h"
 
+#include <bitmap.h>
+
 /* A simple implementation of malloc().
 
    The size of each request, in bytes, is rounded up to a power
@@ -67,6 +69,19 @@ static size_t desc_cnt;         /* Number of descriptors. */
 static struct arena *block_to_arena (struct block *);
 static struct block *arena_to_block (struct arena *, size_t idx);
 
+/* Used for the leak detector */
+struct track_block
+{
+	char caller[LEAK_CALLER_STR_SIZE];
+	struct block *b;
+};
+struct track_block trackers[LEAK_NUM_TRACKERS];
+struct lock blocks_lock;
+
+#define LEAK_BITMAP_SIZE 72
+char bitmap_mem[LEAK_BITMAP_SIZE]; /* printf("Needed buffer for bitmap: %d\n", bitmap_buf_size(LEAK_NUM_TRACKERS));  prints 72 */
+struct bitmap *bitmap;
+
 /* Initializes the malloc() descriptors. */
 void
 malloc_init (void) 
@@ -82,12 +97,17 @@ malloc_init (void)
       list_init (&d->free_list);
       lock_init (&d->lock);
     }
+
+  /* Init leak detector stuff */
+  lock_init (&blocks_lock);
+  bitmap = bitmap_create_in_buf (LEAK_NUM_TRACKERS, bitmap_mem, LEAK_BITMAP_SIZE);
+
 }
 
 /* Obtains and returns a new block of at least SIZE bytes.
    Returns a null pointer if memory is not available. */
 void *
-malloc (size_t size) 
+malloc_orig (size_t size, const char *func) 
 {
   struct desc *d;
   struct block *b;
@@ -150,6 +170,20 @@ malloc (size_t size)
   a = block_to_arena (b);
   a->free_cnt--;
   lock_release (&d->lock);
+
+  /* Leak detector */
+  lock_acquire (&blocks_lock);
+  int idx = bitmap_scan_and_flip (bitmap, 0, 1, false);
+  if (idx == BITMAP_ERROR) {
+	printf("Error allocating tracker for leak detector!\n");
+	lock_release (&blocks_lock);
+	return b;
+  }
+  printf("setting idx %d to caller %s\n", idx, func);
+  strlcpy(trackers[idx].caller, func, LEAK_CALLER_STR_SIZE);
+  trackers[idx].b = b;
+  lock_release (&blocks_lock);
+
   return b;
 }
 
@@ -228,6 +262,21 @@ free (void *p)
         {
           /* It's a normal block.  We handle it here. */
 
+       	/* Leak detector remove freed block */
+	int idx = 0;
+	lock_acquire(&blocks_lock);
+	while (idx < LEAK_NUM_TRACKERS) {
+		idx = bitmap_scan(bitmap, idx, 1, true);
+		if (idx == BITMAP_ERROR) break;
+		if (trackers[idx].b == b) {
+			bitmap_flip(bitmap, idx);
+			break;
+			}
+		idx++;
+
+	}
+	lock_release(&blocks_lock);
+
 #ifndef NDEBUG
           /* Clear the block to help detect use-after-free bugs. */
           memset (b, 0xcc, d->block_size);
@@ -292,3 +341,21 @@ arena_to_block (struct arena *a, size_t idx)
                            + sizeof *a
                            + idx * a->desc->block_size);
 }
+
+void check_malloc_exit ()
+{
+	struct track_block *b;
+	struct list_elem *e;
+	int idx = 0;
+	printf("Checking for leaks: \n");
+	lock_acquire(&blocks_lock);
+	while (idx < LEAK_NUM_TRACKERS) {
+		idx = bitmap_scan(bitmap, idx, 1, true);
+		if (idx == BITMAP_ERROR) break;
+		printf("ALLOCATED block from caller idx=%d: %s\n", idx, trackers[idx].caller);
+		idx++;
+
+	}
+	lock_release(&blocks_lock);
+}
+
