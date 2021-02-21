@@ -179,7 +179,7 @@ malloc_orig (size_t size, const char *func)
 	lock_release (&blocks_lock);
 	return b;
   }
-  printf("setting idx %d to caller %s\n", idx, func);
+//  printf("setting idx %d to caller %s\n", idx, func);
   strlcpy(trackers[idx].caller, func, LEAK_CALLER_STR_SIZE);
   trackers[idx].b = b;
   lock_release (&blocks_lock);
