@@ -4,7 +4,6 @@ cp
 echo
 halt
 hex-dump
-ls
 rm
 lineup
 matmult

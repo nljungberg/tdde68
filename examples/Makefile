@@ -3,7 +3,7 @@ SRCDIR = ..
 # Test programs to compile, and a list of sources for each.
 # To add a new test, put its name on the PROGS list
 # and then add a name_SRC line that lists its source files.
-PROGS = cat cmp cp echo halt hex-dump ls rm \
+PROGS = cat cmp cp echo halt hex-dump rm \
 	lineup recursor lab1test lab2test lab4test1 lab4test2 \
 	printf recursor_ng
 
@@ -21,7 +21,6 @@ echo_SRC = echo.c
 halt_SRC = halt.c
 hex-dump_SRC = hex-dump.c
 lineup_SRC = lineup.c
-ls_SRC = ls.c
 rm_SRC = rm.c
 
 # Should work once exec() is implemented (Lab 4)
