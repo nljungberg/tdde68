@@ -41,7 +41,7 @@ run_vm ();
 finish_scratch_disk ();
 
 exit 0;
-
+
 # Parses the command line.
 sub parse_command_line {
     usage (0) if @ARGV == 0 || (@ARGV == 1 && $ARGV[0] eq '--help');
@@ -72,6 +72,7 @@ sub parse_command_line {
 		    "v|no-vga" => sub { set_vga ('none'); },
 		    "s|no-serial" => sub { $serial = 0; },
 		    "t|terminal" => sub { set_vga ('terminal'); },
+            "w|window" => sub { set_vga ('vga'); },
 
 		    "p|put-file=s" => sub { add_file (\@puts, $_[1]); },
 		    "g|get-file=s" => sub { add_file (\@gets, $_[1]); },
@@ -101,9 +102,9 @@ sub parse_command_line {
 	  or exit 1;
     }
 
-    $sim = "bochs" if !defined $sim;
+    $sim = "qemu" if !defined $sim;
     $debug = "none" if !defined $debug;
-    $vga = exists ($ENV{DISPLAY}) ? "window" : "none" if !defined $vga;
+    $vga = "none" if !defined $vga;
 
     undef $timeout, print "warning: disabling timeout with --$debug\n"
       if defined ($timeout) && $debug ne 'none';
@@ -129,17 +130,18 @@ Usage: pintos [OPTION...] -- [ARGUMENT...]
 where each OPTION is one of the following options
   and each ARGUMENT is passed to Pintos kernel verbatim.
 Simulator selection:
-  --bochs                  (default) Use Bochs as simulator
-  --qemu                   Use QEMU as simulator
+  --bochs                  Use Bochs as simulator
+  --qemu                   (default) Use QEMU as simulator
   --player                 Use VMware Player as simulator
 Debugger selection:
   --no-debug               (default) No debugger
   --monitor                Debug with simulator's monitor
   --gdb                    Debug with gdb
 Display options: (default is both VGA and serial)
-  -v, --no-vga             No VGA display or keyboard
+  -v, --no-vga             (default) No VGA display or keyboard
   -s, --no-serial          No serial input or output
   -t, --terminal           Display VGA in terminal (Bochs only)
+  -w, --window             Display simulator window
 Timing options: (Bochs only)
   -j SEED                  Randomize timer interrupts
   -r, --realtime           Use realistic, not reproducible, timings
