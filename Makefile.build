@@ -89,7 +89,10 @@ threads/loader.o: threads/loader.S
 	$(CC) -c $< -o $@ $(ASFLAGS) $(CPPFLAGS) $(DEFINES)
 
 loader.bin: threads/loader.o
-	$(LD) -N -e 0 -Ttext 0x7c00 --oformat binary -o $@ $<
+	#$(LD) -N -e start -Ttext 0x7c00 --oformat binary -o $@ $<
+	$(LD) -N -e start -Ttext 0x7c00 -o $@.tmp $<
+	$(OBJCOPY) -O binary -R .note -R .note.* -R .comment -S $@.tmp $@
+	rm $@.tmp
 
 os.dsk: kernel.bin
 	cat $^ > $@
