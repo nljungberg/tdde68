@@ -9,4 +9,6 @@
 /* Page directory with kernel mappings only. */
 extern uint32_t* init_page_dir;
 
+extern int thread_create_limit;
+
 #endif /* threads/init.h */

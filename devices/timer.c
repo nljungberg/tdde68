@@ -12,12 +12,7 @@
 
 /* See [8254] for hardware details of the 8254 timer chip. */
 
-#if TIMER_FREQ < 19
-#error 8254 timer requires TIMER_FREQ >= 19
-#endif
-#if TIMER_FREQ > 1000
-#error TIMER_FREQ <= 1000 recommended
-#endif
+static uint16_t TIMER_FREQ = 0;
 
 /* Number of timer ticks since OS booted. */
 static int64_t ticks;
@@ -34,8 +29,9 @@ static void real_time_delay(int64_t num, int32_t denom);
 
 /* Sets up the timer to interrupt TIMER_FREQ times per second,
 	and registers the corresponding interrupt. */
-void timer_init(void)
+void timer_init(const uint16_t timer_freq)
 {
+	TIMER_FREQ = timer_freq;
 	pit_configure_channel(0, 2, TIMER_FREQ);
 	intr_register_ext(0x20, timer_interrupt, "8254 Timer");
 }

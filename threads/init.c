@@ -28,6 +28,7 @@
 #include "userprog/exception.h"
 #include "userprog/gdt.h"
 #include "userprog/process.h"
+#include "userprog/slowdown.h"
 #include "userprog/syscall.h"
 #include "userprog/tss.h"
 #else
@@ -56,6 +57,16 @@ static const char* swap_bdev_name;
 #endif
 #endif /* FILESYS */
 
+/* -F: Set timer frequency */
+static uint16_t init_timer_freq = 1000;
+
+/* -S: Execute kernel thread slowly */
+static bool slow_kernel_threads = false;
+
+/* -tcl: Set limit on threads that can be created */
+int thread_create_limit = 0; /* Infinite */
+/* -fl: Maximum number of pages to put into palloc's free pool */
+static size_t free_page_limit = SIZE_MAX;
 /* -ul: Maximum number of pages to put into palloc's user pool. */
 static size_t user_page_limit = SIZE_MAX;
 
@@ -96,7 +107,7 @@ int main(void)
 		 "Pintos booting with %'" PRIu32 " kB RAM...\n", init_ram_pages * PGSIZE / 1024);
 
 	/* Initialize memory system. */
-	palloc_init(user_page_limit);
+	palloc_init(user_page_limit, free_page_limit);
 	malloc_init();
 	paging_init();
 
@@ -108,12 +119,15 @@ int main(void)
 
 	/* Initialize interrupt handlers. */
 	intr_init();
-	timer_init();
+	timer_init(init_timer_freq);
 	kbd_init();
 	input_init();
 #ifdef USERPROG
 	exception_init();
 	syscall_init();
+	if (slow_kernel_threads) {
+		slowdown_init();
+	}
 #endif
 
 	/* Start thread scheduler and enable interrupts. */
@@ -233,6 +247,11 @@ static char** parse_options(char** argv)
 			shutdown_configure(SHUTDOWN_POWER_OFF);
 		else if (!strcmp(name, "-r"))
 			shutdown_configure(SHUTDOWN_REBOOT);
+		else if (!strcmp(name, "-F"))	  // klaar@ida
+			init_timer_freq = atoi(value);
+		else if (!strcmp(name, "-S"))	  // filst@ida
+			slow_kernel_threads = true;
+
 #ifdef FILESYS
 		else if (!strcmp(name, "-f"))
 			format_filesys = true;
@@ -252,6 +271,10 @@ static char** parse_options(char** argv)
 #ifdef USERPROG
 		else if (!strcmp(name, "-ul"))
 			user_page_limit = atoi(value);
+		else if (!strcmp(name, "-fl"))
+			free_page_limit = atoi(value);
+		else if (!strcmp(name, "-tcl"))
+			thread_create_limit = atoi(value);
 #endif
 		else
 			PANIC("unknown option `%s' (use -h for help)", name);
@@ -329,6 +352,10 @@ static void run_actions(char** argv)
 		argv += a->argc;
 	}
 }
+/* -F: Set timer frequency */
+/* -S: Execute kernel thread slowly */
+/* -tcl: Set limit on threads that can be created */
+/* -fl: Maximum number of pages to put into palloc's free pool */
 
 /* Prints a kernel command line help message and powers off the
 	machine. */
@@ -356,6 +383,7 @@ static void usage(void)
 		 "  -h                 Print this help message and power off.\n"
 		 "  -q                 Power off VM after actions or on panic.\n"
 		 "  -r                 Reboot after actions.\n"
+		 "  -S                 Execute kernel thread slowly (Debugging).\n"
 #ifdef FILESYS
 		 "  -f                 Format file system device during startup.\n"
 		 "  -filesys=BDEV      Use BDEV for file system instead of default.\n"
@@ -366,6 +394,9 @@ static void usage(void)
 #endif
 		 "  -rs=SEED           Set random number seed to SEED.\n"
 		 "  -mlfqs             Use multi-level feedback queue scheduler.\n"
+		 "  -F=FREQ            Set the system timer to FREQ frequency.\n"
+		 "  -tcl=COUNT         Limit the number of threads to COUNT.\n"
+		 "  -fl=COUNT          Limit system memory to COUNT pages.\n"
 #ifdef USERPROG
 		 "  -ul=COUNT          Limit user memory to COUNT pages.\n"
 #endif

@@ -181,6 +181,22 @@ void intr_register_ext(uint8_t vec_no, intr_handler_func* handler, const char* n
 	register_handler(vec_no, 0, INTR_OFF, handler, name);
 }
 
+/* Clear registration for VEC_NO to re-register it later. */
+void intr_clear_int(uint8_t vec_no)
+{
+	ASSERT(vec_no < 0x20 || vec_no > 0x2f);
+	intr_handlers[vec_no] = NULL;
+}
+
+/* Bypass an already existing registration. */
+intr_handler_func* intr_bypass_int(uint8_t vec_no, intr_handler_func* handler)
+{
+	ASSERT(vec_no < 0x20 || vec_no > 0x2f);
+	ASSERT(intr_handlers[vec_no]);
+	intr_handler_func* old = intr_handlers[vec_no];
+	intr_handlers[vec_no] = handler;
+	return old;
+}
 /* Registers internal interrupt VEC_NO to invoke HANDLER, which
 	is named NAME for debugging purposes.  The interrupt handler
 	will be invoked with interrupt status LEVEL.

@@ -5,9 +5,9 @@
 #include <stdint.h>
 
 /* Number of timer interrupts per second. */
-#define TIMER_FREQ 100
+// #define TIMER_FREQ 100
 
-void timer_init(void);
+void timer_init(const uint16_t timer_freq);
 void timer_calibrate(void);
 
 int64_t timer_ticks(void);
