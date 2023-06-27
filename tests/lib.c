@@ -6,7 +6,8 @@
 #include <string.h>
 #include <syscall.h>
 
-const char* test_name;
+// Note: test_name is overridden in some tests, and not in others.
+__attribute__((weak)) const char* test_name;
 bool quiet = false;
 
 static void vmsg(const char* format, va_list args, const char* suffix)
