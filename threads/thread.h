@@ -31,27 +31,27 @@ typedef int tid_t;
 	thread's kernel stack, which grows downward from the top of
 	the page (at offset 4 kB).  Here's an illustration:
 
-		  4 kB +---------------------------------+
-				 |          kernel stack           |
-				 |                |                |
-				 |                |                |
-				 |                V                |
-				 |         grows downward          |
-				 |                                 |
-				 |                                 |
-				 |                                 |
-				 |                                 |
-				 |                                 |
-				 |                                 |
-				 |                                 |
-				 |                                 |
-				 +---------------------------------+
-				 |              magic              |
-				 |                :                |
-				 |                :                |
-				 |               name              |
-				 |              status             |
-		  0 kB +---------------------------------+
+		  4 kB  +---------------------------------+
+				|          kernel stack           |
+				|                |                |
+				|                |                |
+				|                V                |
+				|         grows downward          |
+				|                                 |
+				|                                 |
+				|                                 |
+				|                                 |
+				|                                 |
+				|                                 |
+				|                                 |
+				|                                 |
+				+---------------------------------+
+				|              magic              |
+				|                :                |
+				|                :                |
+				|               name              |
+				|              status             |
+		  0 kB  +---------------------------------+
 
 	The upshot of this is twofold:
 
@@ -73,6 +73,7 @@ typedef int tid_t;
 	the `magic' member of the running thread's `struct thread' is
 	set to THREAD_MAGIC.  Stack overflow will normally change this
 	value, triggering the assertion. */
+
 /* The `elem' member has a dual purpose.  It can be an element in
 	the run queue (thread.c), or it can be an element in a
 	semaphore wait list (synch.c).  It can be used these two ways
