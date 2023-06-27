@@ -1,18 +1,20 @@
 #include <stdio.h>
 #include <syscall.h>
 
-// compile it, copy to the pintos virtual disk an call this program with arguments using
-// the command
-//  pintos --qemu -- run lab3test1
-// if lab 3 is correctly implemented this program should call itself in an infinite loop
-// and spawn itself as a child process indefinetly the PID of each child process created
-// should be printed to the screen
-//  In order to see if your implementation works check if the PID of each new  child
-//  process is incremented as it should
+/* Compile it, and run it from userprog/ with the following command
+	 pintos -v -k -T 240 --filesys-size=2 -p ../examples/lab4test1 -a lab4 -- -f -q run
+lab4
 
-int main(int argc, char* argv[])
+If lab 4 is correctly implemented this program should call itself in an infinite loop
+and spawn itself as a child process indefinetly the PID of each child process created
+should be printed to the screen
+In order to see if your implementation works check if the PID of each new  child
+process is incremented as it should
+*/
+
+int main(void)
 {
-	int pid = exec("lab3test1");
+	int pid = exec("lab4");
 	printf("Child process ID: %d\n", pid);
 
 	return EXIT_SUCCESS;

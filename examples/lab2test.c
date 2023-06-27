@@ -1,5 +1,8 @@
 /*
-  Complete test suite for most system calls implemented in lab 1.
+	Compile it, and run it from userprog/ with the following command
+		 pintos -v -k --filesys-size=2 -p ../examples/lab2test -a lab2 -- -f -q run lab2
+
+	Complete test suite for most system calls implemented in lab 2.
 
 	This program tests the minimum file limit and verifies all
 	returned data.
@@ -185,6 +188,7 @@ int main(void)
 		 "The test suite should now exit. Since SYS_WAIT is not implemented yet, the "
 		 "program should hang. ");
 	TITLE("If it does, it means that all tests were successful.\n");
+	TITLE("If wait() is implemented, the program should exit with status 0.\n");
 	exit(0);
 
 	ERROR("ERR: Thread did not exit.\n");
