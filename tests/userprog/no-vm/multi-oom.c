@@ -73,6 +73,7 @@ static int NO_INLINE consume_some_resources_and_die(int seed)
 	switch (random_ulong() % 5) {
 		case 0:
 			*(volatile int*) NULL = 42;
+			break;
 
 		case 1:
 			return *(volatile int*) NULL;
@@ -82,6 +83,7 @@ static int NO_INLINE consume_some_resources_and_die(int seed)
 
 		case 3:
 			*PHYS_BASE = 42;
+			break;
 
 		case 4:
 			open((char*) PHYS_BASE);
