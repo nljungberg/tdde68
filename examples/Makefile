@@ -3,10 +3,17 @@ SRCDIR = ..
 # Test programs to compile, and a list of sources for each.
 # To add a new test, put its name on the PROGS list
 # and then add a name_SRC line that lists its source files.
-PROGS = cat cmp cp echo halt hex-dump ls mcat mcp mkdir pwd rm shell \
-	bubsort lineup matmult recursor
+PROGS = cat cmp cp echo halt hex-dump ls rm \
+	lineup recursor lab1test lab2test lab4test1 lab4test2 \
+	printf recursor_ng
 
-# Should work from project 2 onward.
+# The example files should start to work as intended in the following order: 
+# Should work once the main-stack is correctly setup (Lab 1)
+lab1test_SRC = lab1test.c
+
+# Should work once the basic system call handler is implemented (Lab 2)
+lab2test_SRC = lab2test.c
+printf_SRC = printf.c
 cat_SRC = cat.c
 cmp_SRC = cmp.c
 cp_SRC = cp.c
@@ -15,19 +22,15 @@ halt_SRC = halt.c
 hex-dump_SRC = hex-dump.c
 lineup_SRC = lineup.c
 ls_SRC = ls.c
-recursor_SRC = recursor.c
 rm_SRC = rm.c
 
-# Should work in project 3; also in project 4 if VM is included.
-bubsort_SRC = bubsort.c
-matmult_SRC = matmult.c
-mcat_SRC = mcat.c
-mcp_SRC = mcp.c
+# Should work once exec() is implemented (Lab 4)
+lab4test1_SRC = lab4test1.c
+lab4test2_SRC = lab4test2.c
 
-# Should work in project 4.
-mkdir_SRC = mkdir.c
-pwd_SRC = pwd.c
-shell_SRC = shell.c
+# Should work once wait() is implemented (Lab 5)
+recursor_SRC = recursor.c
+recursor_ng_SRC = recursor_ng.c
 
 include $(SRCDIR)/Make.config
 include $(SRCDIR)/Makefile.userprog
