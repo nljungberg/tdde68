@@ -3,17 +3,17 @@
 
 /* Interrupt stubs.
 
-   These are little snippets of code in intr-stubs.S, one for
-   each of the 256 possible x86 interrupts.  Each one does a
-   little bit of stack manipulation, then jumps to intr_entry().
-   See intr-stubs.S for more information.
+	These are little snippets of code in intr-stubs.S, one for
+	each of the 256 possible x86 interrupts.  Each one does a
+	little bit of stack manipulation, then jumps to intr_entry().
+	See intr-stubs.S for more information.
 
-   This array points to each of the interrupt stub entry points
-   so that intr_init() can easily find them. */
-typedef void intr_stub_func (void);
-extern intr_stub_func *intr_stubs[256];
+	This array points to each of the interrupt stub entry points
+	so that intr_init() can easily find them. */
+typedef void intr_stub_func(void);
+extern intr_stub_func* intr_stubs[256];
 
 /* Interrupt return path. */
-void intr_exit (void);
+void intr_exit(void);
 
 #endif /* threads/intr-stubs.h */
