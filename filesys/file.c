@@ -9,7 +9,6 @@
 struct file {
 	struct inode* inode; /* File's inode. */
 	off_t pos;				/* Current position. */
-	bool deny_write;		/* Has file_deny_write() been called? */
 };
 
 /* Opens a file for the given INODE, of which it takes ownership,
@@ -21,7 +20,6 @@ struct file* file_open(struct inode* inode)
 	if (inode != NULL && file != NULL) {
 		file->inode = inode;
 		file->pos = 0;
-		file->deny_write = false;
 		return file;
 	}
 	else {
@@ -100,29 +98,6 @@ off_t file_write(struct file* file, const void* buffer, off_t size)
 off_t file_write_at(struct file* file, const void* buffer, off_t size, off_t file_ofs)
 {
 	return inode_write_at(file->inode, buffer, size, file_ofs);
-}
-
-/* Prevents write operations on FILE's underlying inode
-	until file_allow_write() is called or FILE is closed. */
-void file_deny_write(struct file* file)
-{
-	ASSERT(file != NULL);
-	if (!file->deny_write) {
-		file->deny_write = true;
-		inode_deny_write(file->inode);
-	}
-}
-
-/* Re-enables write operations on FILE's underlying inode.
-	(Writes might still be denied by some other file that has the
-	same inode open.) */
-void file_allow_write(struct file* file)
-{
-	ASSERT(file != NULL);
-	if (file->deny_write) {
-		file->deny_write = false;
-		inode_allow_write(file->inode);
-	}
 }
 
 /* Returns the size of FILE in bytes. */

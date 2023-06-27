@@ -34,7 +34,6 @@ struct inode {
 	block_sector_t sector;	/* Sector number of disk location. */
 	int open_cnt;				/* Number of openers. */
 	bool removed;				/* True if deleted, false otherwise. */
-	int deny_write_cnt;		/* 0: writes ok, >0: deny writes. */
 	struct inode_disk data; /* Inode content. */
 };
 
@@ -124,7 +123,6 @@ struct inode* inode_open(block_sector_t sector)
 	list_push_front(&open_inodes, &inode->elem);
 	inode->sector = sector;
 	inode->open_cnt = 1;
-	inode->deny_write_cnt = 0;
 	inode->removed = false;
 	block_read(fs_device, inode->sector, &inode->data);
 	return inode;
@@ -237,9 +235,6 @@ off_t inode_write_at(struct inode* inode, const void* buffer_, off_t size, off_t
 	off_t bytes_written = 0;
 	uint8_t* bounce = NULL;
 
-	if (inode->deny_write_cnt)
-		return 0;
-
 	while (size > 0) {
 		/* Sector to write, starting byte offset within sector. */
 		block_sector_t sector_idx = byte_to_sector(inode, offset);
@@ -286,24 +281,6 @@ off_t inode_write_at(struct inode* inode, const void* buffer_, off_t size, off_t
 	free(bounce);
 
 	return bytes_written;
-}
-
-/* Disables writes to INODE.
-	May be called at most once per inode opener. */
-void inode_deny_write(struct inode* inode)
-{
-	inode->deny_write_cnt++;
-	ASSERT(inode->deny_write_cnt <= inode->open_cnt);
-}
-
-/* Re-enables writes to INODE.
-	Must be called once by each inode opener who has called
-	inode_deny_write() on the inode, before closing the inode. */
-void inode_allow_write(struct inode* inode)
-{
-	ASSERT(inode->deny_write_cnt > 0);
-	ASSERT(inode->deny_write_cnt <= inode->open_cnt);
-	inode->deny_write_cnt--;
 }
 
 /* Returns the length, in bytes, of INODE's data. */
