@@ -1,6 +1,11 @@
 #ifndef __LIB_DEBUG_H
 #define __LIB_DEBUG_H
 
+/* klaar@ida 2011-01-12: A macro to allow debug printouts without
+ * interfering with the test programs. The first argument must be a
+ * literal string (in double-quotes). */
+#define debug(fmt, ...) printf("# " fmt, ##__VA_ARGS__)
+
 /* GCC lets us add "attributes" to functions, function
 	parameters, etc. to indicate their properties.
 	See the GCC manual for details. */
