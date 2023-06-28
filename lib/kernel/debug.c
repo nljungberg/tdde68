@@ -48,6 +48,10 @@ void debug_panic(
 		;
 }
 
+// Don't raise a warning about unsafe usage of __builtin_frame_address.
+// We know that we will have a calling function, so calling with id = 1 is safe.
+#pragma GCC diagnostic ignored "-Wframe-address"
+
 /* Print call stack of a thread.
 	The thread may be running, ready, or blocked. */
 static void print_stacktrace(struct thread* t, void* aux UNUSED)
