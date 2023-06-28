@@ -22,6 +22,7 @@
 
 static thread_func start_process NO_RETURN;
 static bool load(const char* cmdline, void (**eip)(void), void** esp);
+static void dump_stack(const void* esp);
 
 /* Starts a new thread running a user program loaded from
 	FILENAME.  The new thread may be scheduled (and may even exit)
@@ -452,4 +453,39 @@ static bool install_page(void* upage, void* kpage, bool writable)
 	return (
 		 pagedir_get_page(t->pagedir, upage) == NULL
 		 && pagedir_set_page(t->pagedir, upage, kpage, writable));
+}
+
+/* With the given stack pointer, will try and output the stack to STDOUT. */
+static void dump_stack(const void* esp)
+{
+	printf("*esp is %p\nstack contents:\n", esp);
+	hex_dump((int) esp, esp, PHYS_BASE - esp + 16, true);
+	/* The same information, only more verbose: */
+	/* It prints every byte as if it was a char and every 32-bit aligned
+		data as if it was a pointer. */
+	void* ptr_save = PHYS_BASE;
+	int i = -15;
+	while (ptr_save - i >= esp) {
+		char* whats_there = (char*) (ptr_save - i);
+		// show the address ...
+		printf("%x\t", (uint32_t) whats_there);
+		// ... printable byte content ...
+		if (*whats_there >= 32 && *whats_there < 127)
+			printf("%c\t", *whats_there);
+		else
+			printf(" \t");
+		// ... and 32-bit aligned content
+		if (i % 4 == 0) {
+			uint32_t* wt_uint32 = (uint32_t*) (ptr_save - i);
+			printf("%x\t", *wt_uint32);
+			printf("\n-------");
+			if (i != 0)
+				printf("------------------------------------------------");
+			else
+				printf(" the border between KERNEL SPACE and USER SPACE ");
+			printf("-------");
+		}
+		printf("\n");
+		i++;
+	}
 }
