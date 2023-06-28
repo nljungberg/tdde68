@@ -457,8 +457,8 @@ static bool install_page(void* upage, void* kpage, bool writable)
 
 // Don't raise a warning about unused function.
 // We know that dump_stack might not be called, this is fine.
-#pragma GCC diagnostic ignored "-Wunused-function"
 
+#pragma GCC diagnostic ignored "-Wunused-function"
 /* With the given stack pointer, will try and output the stack to STDOUT. */
 static void dump_stack(const void* esp)
 {
@@ -493,3 +493,4 @@ static void dump_stack(const void* esp)
 		i++;
 	}
 }
+#pragma GCC diagnostic pop

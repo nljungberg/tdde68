@@ -96,7 +96,6 @@ void* memchr(const void* block_, int ch_, size_t size)
 
 // Disable warnings about comparing nonnull argument to NULL. In this case it's not
 // a problem.
-#pragma GCC diagnostic ignored "-Wnonnull-compare"
 
 /* Finds and returns the first occurrence of C in STRING, or a
 	null pointer if C does not appear in STRING.  If C == '\0'
@@ -106,8 +105,9 @@ char* strchr(const char* string, int c_)
 {
 	char c = c_;
 
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
 	ASSERT(string != NULL);
-
+#pragma GCC diagnostic pop
 	for (;;)
 		if (*string == c)
 			return (char*) string;
@@ -116,7 +116,6 @@ char* strchr(const char* string, int c_)
 		else
 			string++;
 }
-#pragma GCC diagnostic pop
 
 /* Returns the length of the initial substring of STRING that
 	consists of characters that are not in STOP. */
@@ -270,18 +269,18 @@ void* memset(void* dst_, int value, size_t size)
 
 // Disable warnings about comparing nonnull argument to NULL. In this case it's not
 // a problem.
-#pragma GCC diagnostic ignored "-Wnonnull-compare"
 /* Returns the length of STRING. */
 size_t strlen(const char* string)
 {
 	const char* p;
 
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
 	ASSERT(string != NULL);
+#pragma GCC diagnostic pop
 
 	for (p = string; *p != '\0'; p++) continue;
 	return p - string;
 }
-#pragma GCC diagnostic pop
 
 /* If STRING is less than MAXLEN characters in length, returns
 	its actual length.  Otherwise, returns MAXLEN. */
