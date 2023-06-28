@@ -51,7 +51,7 @@ void palloc_init(size_t user_page_limit, size_t free_page_limit)
 	size_t user_pages = free_pages / 2;
 	size_t kernel_pages;
 	if (free_pages > free_page_limit)
-		free_pages - free_page_limit;
+		free_pages = free_page_limit;
 	if (user_pages > user_page_limit)
 		user_pages = user_page_limit;
 	kernel_pages = free_pages - user_pages;
