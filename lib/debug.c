@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 
+// Don't raise a warning about unsafe usage of __builtin_frame_address.
+// We know that we will have a calling function, so calling with id = 1 is safe.
+#pragma GCC diagnostic ignored "-Wframe-address"
+
 /* Prints the call stack, that is, a list of addresses, one in
 	each of the functions we are nested within.  gdb or addr2line
 	may be applied to kernel.o to translate these into file names,
