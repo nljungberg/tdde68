@@ -84,7 +84,10 @@ static void test_sleep(int thread_cnt, int iterations)
 		t->duration = (i + 1) * 10;
 		t->iterations = 0;
 
+/* The way the tests are built make sure that this isn't a problem */
+#pragma GCC diagnostic ignored "-Wformat-truncation"
 		snprintf(name, sizeof name, "thread %d", i);
+#pragma GCC diagnostic pop
 		thread_create(name, PRI_DEFAULT, sleeper, t);
 	}
 
