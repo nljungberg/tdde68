@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <syscall.h>
 
+
+/* NOTE: Will not work until the WRITE syscall is implemented. */
+
 /* Compile it, and run it from userprog/ with the following command
 	 pintos -v -k -T 240 --filesys-size=2 -p ../examples/lab1test -a lab1 -- -f -q run
 'lab1 arg1 arg2 arg3'
