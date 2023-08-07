@@ -6,7 +6,8 @@
 'lab1 arg1 arg2 arg3'
 
 If lab 1 is correctly implemented the arguments should be printed to the
-console try it wih different arguments and different number of arguments
+console.
+Try it wih different arguments and different number of arguments.
 */
 
 int main(int argc, char* argv[])
