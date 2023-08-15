@@ -22,20 +22,20 @@ int main(void)
 {
   int values = 5;
 
-  // Detta är en vanlig array av heltal.
+  // This is a normal array of integers
   int *contents = malloc(sizeof(int) * values);
 
-  // Detta är en array av pekare till heltal.
-  // Tänk: int *data[];
+  // This is an array of pointers to integers
+  // Hint: int *data[];
   int **data = malloc(sizeof(int *) * values);
 
-  // Fyll i data:
+  // Fill with data:
   for (int i = 0; i < values; i++) {
     contents[i] = i * 5;
     data[i] = &contents[i];
   }
 
-  // Skriv ut data:
+  // Print data:
   for (int i = 0; i <= values; i++) {
     int *pointer = data[i];
     int value = *pointer;

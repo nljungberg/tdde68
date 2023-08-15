@@ -17,8 +17,8 @@
  */
 
 
-// Skapa en kopia av en sträng. Är tänkt att fungera som funktionen "strdup" i
-// standardbiblioteket (se "man strdup" för detaljer).
+// Create a copy of a string. Basically, this should work just like "strdup" in
+// the standard library (see "man strdup" for details).
 char *my_strdup(const char *original)
 {
   int length = strlen(original);

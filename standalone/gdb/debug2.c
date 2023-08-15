@@ -18,9 +18,9 @@
  */
 
 
-// Skapa en array av tal.
-// Notera: denna typ av slump är inte särskilt bra, men
-// duger för vårt exempel.
+// Create an array of integers.
+// Note: The randomness is not that great, but it doesn't
+// matter for this use case.
 int *create_numbers(int count)
 {
   srand(time(NULL));
@@ -33,7 +33,7 @@ int *create_numbers(int count)
   return result;
 }
 
-// Skriv ut en array av tal.
+// Print out an array of integers.
 void print_numbers(int *numbers, int count)
 {
   for (int i = 0; i < count; i++) {
@@ -42,7 +42,7 @@ void print_numbers(int *numbers, int count)
   }
 }
 
-// Skriv ut tal med en rubrik ovanför.
+// Print out integers with a header.
 void print_with_header(const char *header, int *numbers, int count)
 {
   printf("%s\n", header);
