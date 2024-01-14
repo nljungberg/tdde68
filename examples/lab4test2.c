@@ -6,11 +6,10 @@
 ../examples/printf -a printf -- -f -q run lab4
 
 if lab 4 is correctly implemented this program should call printf 5 times, and spawn
-a child process for each of these calls the PID of each child process created should
-be printed to the console.
+a child process for each of these calls.
 In order to see if your implementation works check if the string "You got it, use
 your debugging skills during the labs!" is printed 5 times and if the PID of each
-new child process is incremented as it should
+new child process is incremented as it should.
 */
 
 int main(void)
