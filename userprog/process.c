@@ -90,7 +90,9 @@ static void start_process(void* cmd_line_)
 	does nothing. */
 int process_wait(tid_t child_tid UNUSED)
 {
-	return -1;
+	for (;;) {
+
+	}
 }
 
 /* Free the current process's resources. */
