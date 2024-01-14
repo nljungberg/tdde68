@@ -4,7 +4,7 @@
 /*  A program that does nothing, a classic no-op.
  *
  * Compile it, and run it from userprog/ with the following command:
-	 pintos -k --filesys-size=2 -p ../examples/noop -a lab1 -- -f -q run 'lab1 arg1 arg2 arg3'
+	 pintos --filesys-size=2 -p ../examples/noop -a binary -- -f -q run 'binary -s 17'
 */
 
 int main(int argc, char** argv)
