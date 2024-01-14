@@ -5,10 +5,13 @@ SRCDIR = ..
 # and then add a name_SRC line that lists its source files.
 PROGS = cat cmp cp echo halt hex-dump rm \
 	lineup recursor lab1test lab2test lab4test1 lab4test2 \
-	printf recursor_ng
+	printf recursor_ng noop
 
 # The example files should start to work as intended in the following order: 
 # Should work once the main-stack is correctly setup (Lab 1)
+noop_SRC = noop.c
+
+# Should work once the write() syscall is implemented (Lab 2)
 lab1test_SRC = lab1test.c
 
 # Should work once the basic system call handler is implemented (Lab 2)
