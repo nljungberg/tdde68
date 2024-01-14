@@ -3,6 +3,7 @@
 		 pintos -v -k --filesys-size=2 -p ../examples/lab2test -a lab2 -- -f -q run lab2
 
 	Complete test suite for most system calls implemented in lab 2.
+	Written by Patrik Sletmo.
 
 	This program tests the minimum file limit and verifies all
 	returned data.
