@@ -2,8 +2,7 @@
 #include <syscall.h>
 
 /* Compile it, and run it from userprog/ with the following command
-	 pintos -v -k -T 240 --filesys-size=2 -p ../examples/lab4test1 -a lab4 -- -f -q run
-lab4
+	 pintos -v -k -T 240 --filesys-size=2 -p ../examples/lab4test1 -a lab4 -- -f -q run lab4
 
 If lab 4 is correctly implemented this program should call itself in an infinite loop
 and spawn itself as a child process indefinetly.
