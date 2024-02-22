@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <syscall.h>
 
-/* Compile it, and run it from userprog/ with the following command
-	 pintos -v -k -T 240 --filesys-size-disk=2 -p ../examples/lab4test2 -a lab4 -p
-../examples/printf -a printf -- -f -q run lab4
+/* Compile it, and run it from userprog/ with the following command 
+	 pintos -v -k -T 240 --filesys-size=2 -p ../examples/lab4test2 -a lab4 -p ../examples/printf -a printf -- -f -q run lab4
 
 if lab 4 is correctly implemented this program should call printf 5 times, and spawn
 a child process for each of these calls.
