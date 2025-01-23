@@ -8,7 +8,7 @@ void append(struct list_item *first, int x)
     new_item->next = NULL;
     
     if (first == NULL) {
-        first = new_item;
+        (*first) = (*new_item);
         return;
     }
 
@@ -16,20 +16,20 @@ void append(struct list_item *first, int x)
     while(current->next != NULL) {
         current = current->next;
     }
-    current->next = new_item;
+    current->next = (new_item);
 }
 
-/* Puts value 'x' at the beginning of the list */
 void prepend(struct list_item *first, int x) {
     struct list_item *new_item = malloc(sizeof(struct list_item));
     new_item->value = x;
     new_item->next = first;
-    first = new_item;
+    (*first) = (*new_item);
 }
 
 
 /* Find the first element in the list larger than x and
  * put x right before that element */
+
 void input_sorted(struct list_item *first, int x) { 
 
     struct list_item *new_item = malloc(sizeof(struct list_item));
@@ -59,13 +59,16 @@ void print(struct list_item *first){
      struct list_item current = malloc(sizeof(struct list_item));
      current = first;
     do{
-        printf("%i%s",current->value, "\n")
+        printf("%i %s\n", current->value, "\n")
         current = current->next;
     }
     while(current != NULL)
 }
 
 void clear(struct list_item* first){
+
+
+
     struct list_item* current = first;
     do{
         current = first->next;
@@ -74,3 +77,5 @@ void clear(struct list_item* first){
     }
     while(first != NULL)
 }
+
+*/
