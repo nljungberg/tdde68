@@ -14,7 +14,11 @@ int main()
 	printf("%d\n", newroot->next->value);
 	prepend(newroot, 5);
 
-	printf("%d", newroot->value);
+	printf("%d\n", newroot->value);
+	//printf("%d\n", newroot->next->next->value);
+	input_sorted(newroot, 12);
+	printf("%d\n", newroot->next->next->value);
+	print(newroot);
 
 	/* Write your test cases here */
 	return 0;

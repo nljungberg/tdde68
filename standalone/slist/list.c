@@ -1,4 +1,5 @@
 #include "list.h"
+#include<stdio.h>
 #include <stdlib.h>
 
 void append(struct list_item *first, int x)
@@ -21,8 +22,11 @@ void append(struct list_item *first, int x)
 
 void prepend(struct list_item *first, int x) {
     struct list_item *new_item = malloc(sizeof(struct list_item));
+    struct list_item *new_first = malloc(sizeof(struct list_item));
+    new_first->value = first->value;
+    new_first->next =first->next;
     new_item->value = x;
-    new_item->next = first;
+    new_item->next = new_first;
     (*first) = (*new_item);
 }
 
@@ -34,48 +38,37 @@ void input_sorted(struct list_item *first, int x) {
 
     struct list_item *new_item = malloc(sizeof(struct list_item));
     new_item->value = x;
-    struct item_list current = first;
-    struct item_list prev = NULL;
+    new_item->next = NULL;
+    struct list_item *current = first;
      if (first == NULL || first->value > x) {
-        new_item->next = *first;
-        first = new_item;
+        prepend(first,x);
         return;
      }
-
-    while(current != NULL){
-        if(current->value > x){
-            new_item->next = current;
-            prev->next = next_item; 
-            return;
-        }
-        prev = current;
+    while(current != NULL|| current->value > x){
+        if(current->next == NULL){
+            append(current, x);
+            return;}
         current = current->next;
     }
-    prev->next = new_item;
-    new_item->next = NULL
+    prepend(current, x);
 }
 
 void print(struct list_item *first){
-     struct list_item current = malloc(sizeof(struct list_item));
+     struct list_item *current;
      current = first;
     do{
-        printf("%i %s\n", current->value, "\n")
+        printf("%i\n", current->value);
         current = current->next;
     }
-    while(current != NULL)
+    while(current != NULL);
 }
 
 void clear(struct list_item* first){
-
-
-
     struct list_item* current = first;
     do{
         current = first->next;
         free(first);
         first = current;
     }
-    while(first != NULL)
+    while(first != NULL);
 }
-
-*/
