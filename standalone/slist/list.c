@@ -59,7 +59,7 @@ void print(struct list_item *first){
      struct list_item current = malloc(sizeof(struct list_item));
      current = first;
     do{
-        printf(%i %s,current->value, "\n")
+        printf("%i%s",current->value, "\n")
         current = current->next;
     }
     while(current != NULL)
