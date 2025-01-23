@@ -32,22 +32,16 @@ void prepend(struct list_item *first, int x) {
  * put x right before that element */
 void input_sorted(struct list_item *first, int x) { 
 
-    struct list_item *prev = malloc(sizeof(struct list_item));
     struct list_item *new_item = malloc(sizeof(struct list_item));
-    struct list_item *current = malloc(sizeof(struct list_item));
     new_item->value = x;
-    current = first;
-    prev = NULL;
-     if (first == NULL) {
-        new_item->next = NULL;
+    struct item_list current = first;
+    struct item_list prev = NULL;
+     if (first == NULL || first->value > x) {
+        new_item->next = *first;
         first = new_item;
         return;
-    }
-     if (first->value > x) {
-        new_item->next = first;
-        first = new_item;
-        return;
-    }
+     }
+
     while(current != NULL){
         if(current->value > x){
             new_item->next = current;
@@ -61,3 +55,22 @@ void input_sorted(struct list_item *first, int x) {
     new_item->next = NULL
 }
 
+void print(struct list_item *first){
+     struct list_item current = malloc(sizeof(struct list_item));
+     current = first;
+    do{
+        printf(%i %s,current->value, "\n")
+        current = current->next;
+    }
+    while(current != NULL)
+}
+
+void clear(struct list_item* first){
+    struct list_item* current = first;
+    do{
+        current = first->next;
+        free(first);
+        first = current;
+    }
+    while(first != NULL)
+}
