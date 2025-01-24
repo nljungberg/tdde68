@@ -49,7 +49,7 @@ void print_with_header(const char *header, int *numbers, int count)
   printf("------------------\n");
 
   print_numbers(numbers, count);
-  free(numbers);
+  //free(numbers);
 }
 
 int main(void)

@@ -21,8 +21,8 @@
 // the standard library (see "man strdup" for details).
 char *my_strdup(const char *original)
 {
-  int length = strlen(original);
-  char *copy = malloc(sizeof(char) * length);
+  int length = strlen(original) + 1;
+  char *copy = malloc(sizeof(char) *length);
   for (int i = 0; i < length; i++)
     copy[i] = original[i];
   return copy;
