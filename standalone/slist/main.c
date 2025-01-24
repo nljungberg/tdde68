@@ -1,24 +1,62 @@
 #include "list.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+
+bool test_append() {
+    struct list_item *root = malloc(sizeof(struct list_item));
+
+	append(root, 100);
+	if(!(root->next->value == 100)) {
+	
+		return false;
+	}
+	append(root, 200);
+
+	if(!(root->next->next->value == 200)) {
+	
+		return false;
+	}
+	if(!(root->value == 0)) {
+		return false;
+	}
+	clear(root);
+	return true;
+}
+
+bool test_prepend() {
+	struct list_item *root = malloc(sizeof(struct list_item));
+
+	prepend(root, 100);
+	if(!(root->value == 100)) {
+	
+		return false;
+	}
+	prepend(root, 200);
+
+	if(!(root->value == 200)) {
+	
+		return false;
+	}
+	if(!(root->next->next->value == 0)) {
+		return false;
+	}
+	clear(root);
+	return true;
+}
+
+
+bool test_input_sorted() {}
+
+
+
 
 
 int main()
 {
-	struct list_item root;
-	root.value = -1;
-	root.next = NULL;
-	struct list_item *newroot = malloc(sizeof(struct list_item));
-	append(newroot, 10);
-
-	printf("%d\n", newroot->next->value);
-	prepend(newroot, 5);
-
-	printf("%d\n", newroot->value);
-	//printf("%d\n", newroot->next->next->value);
-	input_sorted(newroot, 12);
-	printf("%d\n", newroot->next->next->value);
-	print(newroot);
+ 	if(test_append) {
+		 printf("%s", "append works");
+	}
 
 	/* Write your test cases here */
 	return 0;
