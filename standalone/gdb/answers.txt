@@ -10,3 +10,11 @@ vi inte har några nummer att printa vid andra körningen.
 debug3 problem: 
 När vi kör lenght = strlen(orginial) så vet den inte när den ska sluta och där med
 blir längden av copy inte korrect. För att fixa skriver vi enght = strlen(orginial) +1.
+
+
+andra svar. page 8 lab0
+
+1. SYS_WRITE
+2. det har med målet på sys_write alltså vilken vi vill kalla sys_write på, file descriptor, stdout
+3. "You got it, user your debugging skills during the labs!\n" vi använde kommandot
+     p *(char **) (f->esp + 8)
