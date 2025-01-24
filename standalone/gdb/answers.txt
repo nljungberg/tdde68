@@ -1,0 +1,12 @@
+
+debug1 problem:
+Vi försöker idexera ett värde i data som inte finns vid den 
+femte körningen av loppen på rad 39
+
+debug2 problem:
+När vi kör print_with_header så freear den numbers vilket gör att
+vi inte har några nummer att printa vid andra körningen.
+
+debug3 problem: 
+När vi kör lenght = strlen(orginial) så vet den inte när den ska sluta och där med
+blir längden av copy inte korrect. För att fixa skriver vi enght = strlen(orginial) +1.
