@@ -1,7 +1,7 @@
 # -*- makefile -*-
 
-tests/%.output: FSDISK = 2
-tests/%.output: PUTFILES = $(filter-out os.dsk, $^)
+tests/%.output: FILESYSSOURCE = --filesys-size=2
+tests/%.output: PUTFILES = $(filter-out kernel.bin loader.bin, $^)
 
 tests/klaar_TESTS = $(addprefix tests/klaar/,read-bad-buf low-mem \
 exec-corrupt pfs)

@@ -1,7 +1,7 @@
 # -*- makefile -*-
 
-tests/%.output: FSDISK = 2
-tests/%.output: PUTFILES = $(filter-out os.dsk, $^)
+tests/%.output: FILESYSSOURCE = --filesys-size=2
+tests/%.output: PUTFILES = $(filter-out kernel.bin loader.bin, $^)
 
 tests/filst_TESTS = $(addprefix tests/filst/,sc-bad-write sc-bad-close sc-bad-nr-1 sc-bad-nr-2 sc-bad-nr-3 sc-bad-align-1 sc-bad-align-2 sc-bad-exit sc-write-buf)
 
