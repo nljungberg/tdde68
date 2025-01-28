@@ -4,30 +4,34 @@
 
 void append(struct list_item *first, int x)
 {
+ 
+    if (first == NULL) {
+        return;
+    }
+
     struct list_item *new_item = malloc(sizeof(struct list_item));
     new_item->value = x;
     new_item->next = NULL;
-    
-    if (first == NULL) {
-        (*first) = (*new_item);
-        return;
-    }
+
 
     struct list_item *current = first;
     while(current->next != NULL) {
         current = current->next;
     }
-    current->next = (new_item);
+    current->next = new_item;
 }
 
 void prepend(struct list_item *first, int x) {
+    if (first == NULL) {
+        return;
+    }
+
     struct list_item *new_item = malloc(sizeof(struct list_item));
-    struct list_item *new_first = malloc(sizeof(struct list_item));
-    new_first->value = first->value;
-    new_first->next =first->next;
-    new_item->value = x;
-    new_item->next = new_first;
-    (*first) = (*new_item);
+    new_item->value = first->value;
+    new_item->next = first->next;
+
+    first->value = x;
+    first->next = new_item;
 }
 
 
@@ -64,11 +68,10 @@ void print(struct list_item *first){
 }
 
 void clear(struct list_item* first){
-    struct list_item* current = first;
-    do{
-        current = first->next;
-        free(first);
-        first = current;
+    struct list_item *current = first;
+    while (current != NULL) {
+        struct list_item *temp = current;
+        current = current->next;
+        free(temp);
     }
-    while(first != NULL);
 }
