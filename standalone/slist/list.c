@@ -9,7 +9,7 @@ void append(struct list_item *first, int x)
         return; 
     }
 
-    struct list_item *new_item = malloc(sizeof(struct list_item));
+    struct list_item* new_item = malloc(sizeof(struct list_item));
     new_item->value = x;
     new_item->next = NULL;
 
@@ -72,9 +72,11 @@ void print(struct list_item *first)
 void clear(struct list_item *first)
 {
     struct list_item *current = first;
-    while (current != NULL) {
-        struct list_item *temp = current;
-        current = current->next;
-        free(temp);
+    first = first->next;
+    current->next = NULL;
+    while (first != NULL) {
+        current = first;
+        first = first->next;
+        free(current);
     }
 }
