@@ -55,12 +55,27 @@ static void start_process(void* cmd_line_)
 	struct intr_frame if_;
 	bool success;
 
+	int argc;
+	char** argv;
+	
+	char s[] = "  String to  tokenize. ";
+	char *token, *save_ptr;
+
+	for (token = strtok_r (cmd_line, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)) {
+		printf ("'%s'\n", token);
+		argc++;
+		argv[argc] = token;
+	}
+
+
 	/* Initialize interrupt frame and load executable. */
 	memset(&if_, 0, sizeof if_);
 	if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
 	if_.cs = SEL_UCSEG;
 	if_.eflags = FLAG_IF | FLAG_MBS;
-	
+
+
+
 	// Note: load requires the file name only, not the entire cmd_line
 	success = load(cmd_line, &if_.eip, &if_.esp);
 
@@ -68,6 +83,11 @@ static void start_process(void* cmd_line_)
 	palloc_free_page(cmd_line);
 	if (!success)
 		thread_exit();
+	
+	for (i = 0; i < argc; i++) {
+		memcpy
+	}
+
 
 	/* Start the user process by simulating a return from an
 		interrupt, implemented by intr_exit (in
