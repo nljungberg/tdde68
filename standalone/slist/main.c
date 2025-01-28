@@ -85,16 +85,16 @@ bool test_clear(){
 
 int main()
 {
- 	if(test_append) {
+ 	if(test_append()) {
 		 printf("%s\n", "append works");
 	}
-	if(test_prepend){
+	if(test_prepend()){
 		printf("%s\n", "prepend works");
 	}
-	if(test_input_sorted){
+	if(test_input_sorted()){
 		printf("%s\n", "input_sorted works");
 	}
-	if(test_clear){
+	if(test_clear()){
 		printf("%s\n", "clear works");
 	}
 	/* Write your test cases here */
