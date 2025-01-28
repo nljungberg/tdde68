@@ -4,7 +4,6 @@
 
 void append(struct list_item *first, int x)
 {
-  
     if (first == NULL) {
         return; 
     }

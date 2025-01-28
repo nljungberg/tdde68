@@ -4,80 +4,82 @@
 #include <stdbool.h>
 
 bool test_append() {
-    struct list_item *root = malloc(sizeof(struct list_item));
-	root->next = NULL;
-	append(root, 100);
-	if(!(root->next->value == 100)) {
-	
-		return false;
-	}
-	append(root, 200);
+    struct list_item root;
+    root.next = NULL;
+    root.value = 0;
+    append(&root, 100);
+    if(!(root.next->value == 100)) {   
+        return false;
+    }
+    append(&root, 200);
 
-	if(!(root->next->next->value == 200)) {
-	
-		return false;
-	}
-	if(!(root->value == 0)) {
-		return false;
-	}
-	clear(root);
-	return true;
+    if(!(root.next->next->value == 200)) {   
+        return false;
+    }
+    if(!(root.value == 0)) {   
+        return false;
+    }
+    clear(&root);
+    return true;
 }
 
 bool test_prepend() {
-	struct list_item *root = malloc(sizeof(struct list_item));
+    struct list_item root;
+    root.next = NULL;
+    root.value = 0;
+    prepend(&root, 100);
+    if(!(root.value == 100)) {   
+        return false;
+    }
+    prepend(&root, 200);
 
-	prepend(root, 100);
-	if(!(root->value == 100)) {
-	
-		return false;
-	}
-	prepend(root, 200);
-
-	if(!(root->value == 200)) {
-	
-		return false;
-	}
-	if(!(root->next->next->value == 0)) {
-		return false;
-	}
-	clear(root);
-	return true;
+    if(!(root.value == 200)) {   
+        return false;
+    }
+    if(!(root.next->next->value == 0)) {   
+        return false;
+    }
+    clear(&root);
+    return true;
 }
 
-
 bool test_input_sorted() {
-	struct list_item *root = malloc(sizeof(struct list_item));
-	input_sorted(root, 100);
-	if(!(root->next->value == 100)){
-		return false;
-	}
+    struct list_item root;
+    root.next = NULL;
+    root.value = 0;
+    input_sorted(&root, 100);
+    if(!(root.next->value == 100)){   
+        return false;
+    }
 
-	input_sorted(root, 50);
-	if(!(root->next->value == 50)){
-		return false;
-	}
+    input_sorted(&root, 50);
+    if(!(root.next->value == 50)){   
+        return false;
+    }
 
-	input_sorted(root, 75);
-	if(!(root->next->next->value == 75)){
-		return false;
-	}
+    input_sorted(&root, 75);
+    if(!(root.next->next->value == 75)){ 
+        return false;
+    }
 
-	clear(root);
-	return true;
+    clear(&root);
+    return true;
 }
 
 bool test_clear(){
-	struct list_item *root = malloc(sizeof(struct list_item));
-	append(root, 30);
-	prepend(root, 5);
-	prepend(root, 10);
-	clear(root);
-	if(!(root->next == NULL)){
-		return false;
-	}
-	return true;
+    struct list_item root;
+    root.next = NULL;
+    root.value = 0;
+    append(&root, 30);
+    prepend(&root, 5);
+    prepend(&root, 10);
+    clear(&root);
+    if(!(root.next == NULL)){  
+        return false;
+    }
+    return true;
 }
+
 
 
 
