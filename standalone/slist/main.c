@@ -5,7 +5,7 @@
 
 bool test_append() {
     struct list_item *root = malloc(sizeof(struct list_item));
-
+	root->next = NULL;
 	append(root, 100);
 	if(!(root->next->value == 100)) {
 	
