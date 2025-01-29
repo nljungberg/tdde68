@@ -60,14 +60,13 @@ static void start_process(void* cmd_line_)
 	
 
 	
-	char s[] = "  String to  tokenize. ";
 	char *token, *save_ptr;
+	char *file_name = strtok_r(cmd_line, " ", &save_ptr);
 
-	for (token = strtok_r (cmd_line, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)) {
-		printf ("'%s'\n", token);
-		argc++;
-		argv_temp[argc] = token;
-	}
+	while ((token = strtok_r(NULL, " ", &save_ptr)) != NULL && argc < 32)
+    {
+        argv_temp[argc++] = token;
+    }
 
 	/* Initialize interrupt frame and load executable. */
 	memset(&if_, 0, sizeof if_);
@@ -77,50 +76,68 @@ static void start_process(void* cmd_line_)
 
 
 	// Note: load requires the file name only, not the entire cmd_line
-	success = load(cmd_line, &if_.eip, &if_.esp);
-
+	success = load(file_name, &if_.eip, &if_.esp);
 	/* If load failed, quit. */
-	if (!success)
+	if (!success) {
+		printf("%s", "failure");
 		palloc_free_page(cmd_line);
 		thread_exit();
-	
+	}
+
 	void* temp_esp = if_.esp;
-	char** argv[argc];
+	char *argv[32];
+
 	for (int i = argc-1; i >= 0; i--) {
 		size_t length = strlen(argv_temp[i]) + 1;
 		temp_esp -= length;
 		memcpy(temp_esp, argv_temp[i], length);
 		argv[i] = (char *)temp_esp;
 	}
-	uint8_t align = (uint8_t) temp_esp % 4;
-	if (align != 0) {
-		temp_esp -= align;
-		memset(temp_esp, 0, align);
+	printf("%s", "first for loop done");
+
+
+	 uintptr_t alignment = (uintptr_t)temp_esp % 4;
+    if (alignment != 0)
+    {
+        temp_esp -= alignment;
+        memset(temp_esp, 0, alignment);
+    }
+
+	//null sentine
+	temp_esp -= sizeof(char *);
+    *(char **)temp_esp = NULL;
+
+
+	for (int i = argc - 1; i >= 0; i--)
+	{
+		temp_esp -= sizeof(char *);
+		memcpy(temp_esp, argv[i], sizeof(char *));
 	}
+	
+	// this is the argv stack
+	char **argv_on_stack = (char **)temp_esp;
+	
+	// push argv on to the stack
+	int size = sizeof(char **);
+	temp_esp -= size;
+	memcpy(temp_esp, argv_on_stack, size);
 
-	for(int j = argc-1; j >= 0;j--){
-		int add_len = sizeof(argv_temp[j]);
-		temp_esp-= add_len;
-		argv[j] = memcpy(temp_esp,argv_temp[j], add_len);
-	}
-	argv[0] = temp_esp;
-	int len = sizeof(argv[0]);
-	temp_esp -= len;
-	memcpy(temp_esp, argv[0], len);
+	// push argc on to the stack
+	size = sizeof(int);
+	temp_esp -= size;
+	*(int *)temp_esp = argc;
 
-	int len = sizeof(argc);
-	temp_esp -= len;
-	memcpy(temp_esp, argc, len);
-
-	int len = sizeof(void (*));
-	temp_esp -= len;
-	memcpy(temp_esp, 0, len);
+	// push fake retunr address
+	size = sizeof(void *);
+	temp_esp -= size;
+    *(void **)temp_esp = 0;
 
 	if_.esp = temp_esp;
 
+	dump_stack(if_.esp);	
 
 	palloc_free_page(cmd_line);
-
+	printf("%s", "We are done with start_rprocess");
 
 
 
@@ -487,7 +504,7 @@ static bool setup_stack(void** esp)
 	if (kpage != NULL) {
 		success = install_page(((uint8_t*) PHYS_BASE) - PGSIZE, kpage, true);
 		if (success)
-			*esp = PHYS_BASE - 12;
+			*esp = PHYS_BASE;
 		else
 			palloc_free_page(kpage);
 	}
