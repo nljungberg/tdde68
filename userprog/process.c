@@ -55,8 +55,10 @@ static void start_process(void* cmd_line_)
 	struct intr_frame if_;
 	bool success;
 
-	int argc;
-	char** argv;
+	int argc = 0;
+	char* argv_temp[32]; // Max args is 32
+	
+
 	
 	char s[] = "  String to  tokenize. ";
 	char *token, *save_ptr;
@@ -64,9 +66,8 @@ static void start_process(void* cmd_line_)
 	for (token = strtok_r (cmd_line, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)) {
 		printf ("'%s'\n", token);
 		argc++;
-		argv[argc] = token;
+		argv_temp[argc] = token;
 	}
-
 
 	/* Initialize interrupt frame and load executable. */
 	memset(&if_, 0, sizeof if_);
@@ -75,18 +76,52 @@ static void start_process(void* cmd_line_)
 	if_.eflags = FLAG_IF | FLAG_MBS;
 
 
-
 	// Note: load requires the file name only, not the entire cmd_line
 	success = load(cmd_line, &if_.eip, &if_.esp);
 
 	/* If load failed, quit. */
-	palloc_free_page(cmd_line);
 	if (!success)
+		palloc_free_page(cmd_line);
 		thread_exit();
 	
-	for (i = 0; i < argc; i++) {
-		memcpy
+	void* temp_esp = if_.esp;
+	char** argv[argc];
+	for (int i = argc-1; i >= 0; i--) {
+		size_t length = strlen(argv_temp[i]) + 1;
+		temp_esp -= length;
+		memcpy(temp_esp, argv_temp[i], length);
+		argv[i] = (char *)temp_esp;
 	}
+	uint8_t align = (uint8_t) temp_esp % 4;
+	if (align != 0) {
+		temp_esp -= align;
+		memset(temp_esp, 0, align);
+	}
+
+	for(int j = argc-1; j >= 0;j--){
+		int add_len = sizeof(argv_temp[j]);
+		temp_esp-= add_len;
+		argv[j] = memcpy(temp_esp,argv_temp[j], add_len);
+	}
+	argv[0] = temp_esp;
+	int len = sizeof(argv[0]);
+	temp_esp -= len;
+	memcpy(temp_esp, argv[0], len);
+
+	int len = sizeof(argc);
+	temp_esp -= len;
+	memcpy(temp_esp, argc, len);
+
+	int len = sizeof(void (*));
+	temp_esp -= len;
+	memcpy(temp_esp, 0, len);
+
+	if_.esp = temp_esp;
+
+
+	palloc_free_page(cmd_line);
+
+
 
 
 	/* Start the user process by simulating a return from an
