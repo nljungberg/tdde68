@@ -1,2 +1,2 @@
-#define BIG	  3000
-#define TIMES 200
+#define BIG	  1500
+#define TIMES 100
