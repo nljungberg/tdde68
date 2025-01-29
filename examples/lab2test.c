@@ -1,6 +1,6 @@
 /*
 	Compile it, and run it from userprog/ with the following command
-		 pintos -v -k --filesys-size=2 -p ../examples/lab2test -a lab2 -- -f -q run lab2
+pintos -v -k --filesys-size=2 -p ../examples/lab2test -a lab2 -- -f -q run lab2
 
 	Complete test suite for most system calls implemented in lab 2.
 	Written by Patrik Sletmo.
@@ -54,8 +54,8 @@
 
 int main(void)
 {
-	char* dummyprint = "Hello, world!\n";
-	char* testdata = "sample file content";
+	char *dummyprint = "Hello, world!\n";
+	char *testdata = "sample file content";
 	bool created;
 	int fd;
 	int bytes_written;
