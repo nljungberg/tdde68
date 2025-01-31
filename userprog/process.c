@@ -62,12 +62,7 @@ static void start_process(void* cmd_line_)
 	
 	char *token, *save_ptr;
 	char *file_name;
-	/** 
-	while ((token = strtok_r(NULL, " ", &save_ptr)) != NULL && argc < 32)
-    {
-        argv_temp[argc++] = token;
-    }
-	*/
+
 	int forCounter = 0;
 	for (token = strtok_r (cmd_line, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)){
 		if (forCounter == 0) {
@@ -88,7 +83,6 @@ static void start_process(void* cmd_line_)
 	success = load(file_name, &if_.eip, &if_.esp);
 	/* If load failed, quit. */
 	if (!success) {
-		printf("%s", "failure");
 		palloc_free_page(cmd_line);
 		thread_exit();
 	}
