@@ -103,11 +103,6 @@ static void start_process(void* cmd_line_)
 		argv[i] = (char *)temp_esp;
 	}
 
-	for(int i = 0; i<argc; i++){
-		printf("argv[%d] = %s\n", i, argv[i]);
-	}
-
-
 	 uintptr_t alignment = (uintptr_t)temp_esp % 4;
     if (alignment != 0)
     {
@@ -151,9 +146,6 @@ static void start_process(void* cmd_line_)
 	dump_stack(if_.esp);
 
 	palloc_free_page(cmd_line);
-	printf("argc = %d\n", argc);
-
-	
 
 	printf("%s", "We are done with start_rprocess");
 
