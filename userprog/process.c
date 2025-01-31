@@ -61,12 +61,21 @@ static void start_process(void* cmd_line_)
 
 	
 	char *token, *save_ptr;
-	char *file_name = strtok_r(cmd_line, " ", &save_ptr);
-
+	char *file_name;
+	/** 
 	while ((token = strtok_r(NULL, " ", &save_ptr)) != NULL && argc < 32)
     {
         argv_temp[argc++] = token;
     }
+	*/
+	int forCounter = 0;
+	for (token = strtok_r (cmd_line, " ", &save_ptr); token != NULL; token = strtok_r (NULL, " ", &save_ptr)){
+		if (forCounter == 0) {
+			file_name = token;
+		}
+		argv_temp[argc++] = token;
+		forCounter++;
+	}
 
 	/* Initialize interrupt frame and load executable. */
 	memset(&if_, 0, sizeof if_);
@@ -93,7 +102,10 @@ static void start_process(void* cmd_line_)
 		memcpy(temp_esp, argv_temp[i], length);
 		argv[i] = (char *)temp_esp;
 	}
-	printf("%s", "first for loop done");
+
+	for(int i = 0; i<argc; i++){
+		printf("argv[%d] = %s\n", i, argv[i]);
+	}
 
 
 	 uintptr_t alignment = (uintptr_t)temp_esp % 4;
@@ -111,7 +123,8 @@ static void start_process(void* cmd_line_)
 	for (int i = argc - 1; i >= 0; i--)
 	{
 		temp_esp -= sizeof(char *);
-		memcpy(temp_esp, argv[i], sizeof(char *));
+		*(void**)temp_esp = argv[i];
+		//memcpy(temp_esp, argv[i], sizeof(char *));
 	}
 	
 	// this is the argv stack
@@ -120,7 +133,8 @@ static void start_process(void* cmd_line_)
 	// push argv on to the stack
 	int size = sizeof(char **);
 	temp_esp -= size;
-	memcpy(temp_esp, argv_on_stack, size);
+	*(void**)temp_esp = argv_on_stack;
+	//memcpy(temp_esp, argv_on_stack, size);
 
 	// push argc on to the stack
 	size = sizeof(int);
@@ -132,11 +146,15 @@ static void start_process(void* cmd_line_)
 	temp_esp -= size;
     *(void **)temp_esp = 0;
 
-	if_.esp = temp_esp;
+	if_.esp = temp_esp;	
 
-	dump_stack(if_.esp);	
+	dump_stack(if_.esp);
 
 	palloc_free_page(cmd_line);
+	printf("argc = %d\n", argc);
+
+	
+
 	printf("%s", "We are done with start_rprocess");
 
 
