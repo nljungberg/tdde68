@@ -39,3 +39,7 @@ b)from the sep value sent in int_frame*
 c)When it points to 0x0 or a value that isn't mapped in the process's memory. if it's a pointer to an adress in kernel memory.
 unmapped user adresses.
 d) We have to controll the pointer and controll that it's under PHYS_BASE and it pointing to a mapped memory place.
+
+4. They are non-negative integers. It starts with 2 (because 0 and 1 are reserved for keyboard and console) and increments for each open file.
+Each process should have a file descriptor table that maps the fid to an actual struct file pointer. Andds every new file to this table with the smalles
+positive integer not already in use. 

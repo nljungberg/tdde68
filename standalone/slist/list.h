@@ -4,6 +4,7 @@
 struct list_item {
 	int value;
 	struct list_item *next;
+
 };
 
 /* Puts x at the end of the list */
