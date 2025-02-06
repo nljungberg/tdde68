@@ -138,7 +138,6 @@ static void start_process(void* cmd_line_)
 
 	if_.esp = temp_esp;	
 
-	dump_stack(if_.esp);
 
 	palloc_free_page(cmd_line);
 

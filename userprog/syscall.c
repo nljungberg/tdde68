@@ -19,82 +19,81 @@ void syscall_init(void)
 }
 
 
-void sleep(int millis);
-void halt(void);
-bool create(const char *file, unsigned initial_size);
-int open(const char *file);
-void close (int fd);
-int write (int fd, const void *buffer, unsigned size);
-int read (int fd, void *buffer, unsigned size);
-bool remove(const char *file_name);
-int filesize(int fd);
-void seek(int fd, unsigned position);
-unsigned tell(int fd);
-void exit(int status);
+void syscall_sleep(int millis);
+void syscall_halt(void);
+bool syscall_create(const char *file, unsigned initial_size);
+int syscall_open(const char *file);
+void syscall_close (int fd);
+int syscall_write (int fd, const void *buffer, unsigned size);
+int syscall_read (int fd, void *buffer, unsigned size);
+bool syscall_remove(const char *file_name);
+int syscall_filesize(int fd);
+void syscall_seek(int fd, unsigned position);
+unsigned syscall_tell(int fd);
+void syscall_exit(int status);
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
-	printf("system call!\n");
 	int syscall_nr = *((int *) f->esp);
 	int *args = (int *) f->esp;
-	switch (syscall_nr)
-	{
-	case SYS_WRITE:
-		f->eax = write(args[1], args[2], args[3]);
-		/* code */
-		break;
-	case SYS_CLOSE:
-		close(args[1]);
-		/* code */
-		break;
-	case SYS_CREATE:
-		f->eax = create(args[1], args[2]);
-		/* code */
-		break;
-	case SYS_HALT:	
-		halt();
-		/* code */
-		break;
-	case SYS_OPEN:
-		f->eax = open(args[1]);
-		/* code */
-		break;
-	case SYS_READ:
-		f->eax = read(args[1], args[2], args[3]);
-		/* code */
-		break;
-	case SYS_SLEEP:
-		sleep(args[1]);
-		/* code */
-		break;
-	case SYS_SEEK:
-		seek(args[1], args[2]);
-		/* code */
-		break;
-	case SYS_TELL:
-		f->eax = tell(args[1]);
-		/* code */
-		break;
-	case SYS_REMOVE:
-		f->eax = remove(args[1]);
-		/* code */
-		break;
-	case SYS_FILESIZE:
-		f->eax = filesize(args[1]);
-		/* code */
-		break;
-	case SYS_EXIT:
-		exit(args[1]);
-		/* code */
-		break;
-	default:
-		break;
-	}
-	thread_exit();
+	printf("%d\n", args[0]);
+	switch (syscall_nr) {
+		case SYS_WRITE: 
+			printf("%s\n", "I'm barley not here");
+			f->eax = syscall_write(args[1], args[2], args[3]);
+			/* code */
+			break;
+		case SYS_CLOSE:
+			syscall_close(args[1]);
+			/* code */
+			break;
+		case SYS_CREATE:
+			f->eax = syscall_create(args[1], args[2]);
+			/* code */
+			break;
+		case SYS_HALT:	
+			syscall_halt();
+			/* code */
+			break;
+		case SYS_OPEN:
+			f->eax = syscall_open(args[1]);
+			/* code */
+			break;
+		case SYS_READ:
+			f->eax = syscall_read(args[1], args[2], args[3]);
+			/* code */
+			break;
+		case SYS_SLEEP:
+			syscall_sleep(args[1]);
+			/* code */
+			break;
+		case SYS_SEEK:
+			syscall_seek(args[1], args[2]);
+			/* code */
+			break;
+		case SYS_TELL:
+			f->eax = syscall_tell(args[1]);
+			/* code */
+			break;
+		case SYS_REMOVE:
+			f->eax = syscall_remove(args[1]);
+			/* code */
+			break;
+		case SYS_FILESIZE:
+			f->eax = syscall_filesize(args[1]);
+			/* code */
+			break;
+		case SYS_EXIT:
+			syscall_exit(args[1]);
+			/* code */
+			break;
+		default:
+			break;
+		}
 }
 
 
-void sleep(int millis){
+void syscall_sleep(int millis){
 	if(millis<0){
 		return;
 	}
@@ -102,15 +101,15 @@ void sleep(int millis){
 	return;
 }
 
-void halt(void){
+void syscall_halt(void){
 	shutdown_power_off();
 }
 
-bool create(const char *file, unsigned initial_size){
+bool syscall_create(const char *file, unsigned initial_size){
 	return filesys_create(file, initial_size);
 }
 
-int open(const char *file){
+int syscall_open(const char *file){
 	struct thread *cur = thread_current();
 	struct file *cur_file = filesys_open(file);
 	for (int i = 2; i < 128; i++) { 
@@ -122,7 +121,7 @@ int open(const char *file){
 	return -1;
 }
 
-void close (int fd) {
+void syscall_close (int fd) {
 	struct thread *cur = thread_current();
 	if ( fd >= 2 && fd < 128) {
 		return;
@@ -133,20 +132,24 @@ void close (int fd) {
 	}
 }
 
-int write (int fd, const void *buffer, unsigned size){
+int syscall_write (int fd, const void *buffer, unsigned size){
+	
 	struct thread *cur = thread_current();
 	if (fd == 1) { // STDOUT
 		putbuf(buffer, size);
+		
 		return size;
 	} else if (fd >= 2 && fd < 128)  {
 		struct file *file = cur->fd_table[fd];
 		int write_size = file_write(file, buffer, size);
+		
 		return write_size;
 	}
+	
 	return -1;
 }
 
-int read (int fd, void *buffer, unsigned size){
+int syscall_read (int fd, void *buffer, unsigned size){
 
 	struct thread *cur = thread_current();
 	if (fd == 0) { // stdin
@@ -164,11 +167,11 @@ int read (int fd, void *buffer, unsigned size){
 
 }
 
-bool remove(const char *file_name){
+bool syscall_remove(const char *file_name){
 	return filesys_remove(file_name);
 }
 
-int filesize(int fd){
+int syscall_filesize(int fd){
 	struct thread *cur = thread_current();
 	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
@@ -177,7 +180,7 @@ int filesize(int fd){
 	return -1;
 }
 
-void seek(int fd, unsigned position){
+void syscall_seek(int fd, unsigned position){
 	struct thread *cur = thread_current();
 	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
@@ -187,7 +190,7 @@ void seek(int fd, unsigned position){
 
 }
 
-unsigned tell(int fd){
+unsigned syscall_tell(int fd){
 	struct thread *cur = thread_current();
 	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
@@ -196,13 +199,14 @@ unsigned tell(int fd){
 	return 0;
 }	
 
-void exit(int status){
+void syscall_exit(int status){
 	struct thread *cur = thread_current();
 	for (int i = 2; i < 128; i++) {
 		if (cur->fd_table != NULL)  {
-			close(i);
+			syscall_close(i);
 		}
 	}
 	cur->status = THREAD_DYING;
 	thread_exit();
 }
+
