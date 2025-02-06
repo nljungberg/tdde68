@@ -11,11 +11,26 @@
 
 static void syscall_handler(struct intr_frame*);
 
+
 void syscall_init(void)
 {
 	intr_register_int(0x30, 3, INTR_ON, syscall_handler, "syscall");
 
 }
+
+
+void sleep(int millis);
+void halt(void);
+bool create(const char *file, unsigned initial_size);
+int open(const char *file);
+void close (int fd);
+int write (int fd, const void *buffer, unsigned size);
+int read (int fd, void *buffer, unsigned size);
+bool remove(const char *file_name);
+int filesize(int fd);
+void seek(int fd, unsigned position);
+unsigned tell(int fd);
+void exit(int status);
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
@@ -97,10 +112,10 @@ bool create(const char *file, unsigned initial_size){
 
 int open(const char *file){
 	struct thread *cur = thread_current();
-	struct file *file = filesys_open(file);
+	struct file *cur_file = filesys_open(file);
 	for (int i = 2; i < 128; i++) { 
 		if (cur->fd_table[i] == NULL) {
-			 cur->fd_table[i] = file;
+			 cur->fd_table[i] = cur_file;
 			 return i;
 		}		
 	}
@@ -131,13 +146,7 @@ int write (int fd, const void *buffer, unsigned size){
 	return -1;
 }
 
-int read (int fd, const void* buffer, unsigned size){
-
-	for (unsigned i = 0; i < size; i++) {  //checks that the buffer is valid
-			if(!is_user_vaddr(buffer + i)) {
-				return -1;
-			}
-		}
+int read (int fd, void *buffer, unsigned size){
 
 	struct thread *cur = thread_current();
 	if (fd == 0) { // stdin
@@ -145,7 +154,7 @@ int read (int fd, const void* buffer, unsigned size){
 		for (unsigned i = 0; i < size; i++) {
 			buf[i] = input_getc();
 		}
-    return size;
+    	return size;
 	} else if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
 		int bytes_read = file_read(file, buffer, size);
@@ -184,7 +193,7 @@ unsigned tell(int fd){
 		struct file *file = cur->fd_table[fd];
 		return file_tell(file);
 	}
-	return;
+	return 0;
 }	
 
 void exit(int status){
@@ -194,6 +203,6 @@ void exit(int status){
 			close(i);
 		}
 	}
-	cur->status = status;
+	cur->status = THREAD_DYING;
 	thread_exit();
 }
