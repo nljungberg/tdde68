@@ -105,10 +105,6 @@ struct thread {
 	unsigned magic; /* Detects stack overflow. */
 };
 
-struct file_descriptor{
-	struct list_item fd_list;
-	int next_fd;
-}
 
 /* If false (default), use round-robin scheduler.
 	If true, use multi-level feedback queue scheduler.

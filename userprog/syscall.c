@@ -20,12 +20,12 @@ void syscall_init(void)
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
 	printf("system call!\n");
-	int syscall_nr = (f->esp);
+	int syscall_nr = *((int *) f->esp);
 	int *args = (int *) f->esp;
 	switch (syscall_nr)
 	{
 	case SYS_WRITE:
-		write(args[1], args[2], args[3]);
+		f->eax = write(args[1], args[2], args[3]);
 		/* code */
 		break;
 	case SYS_CLOSE:
@@ -33,7 +33,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 		/* code */
 		break;
 	case SYS_CREATE:
-		create(args[1], args[2]);
+		f->eax = create(args[1], args[2]);
 		/* code */
 		break;
 	case SYS_HALT:	
@@ -41,11 +41,11 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 		/* code */
 		break;
 	case SYS_OPEN:
-		open(args[1]);
+		f->eax = open(args[1]);
 		/* code */
 		break;
 	case SYS_READ:
-		read(args[1], args[2], args[3]);
+		f->eax = read(args[1], args[2], args[3]);
 		/* code */
 		break;
 	case SYS_SLEEP:
@@ -57,15 +57,15 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 		/* code */
 		break;
 	case SYS_TELL:
-		tell(args[1]);
+		f->eax = tell(args[1]);
 		/* code */
 		break;
 	case SYS_REMOVE:
-		remove(args[1]);
+		f->eax = remove(args[1]);
 		/* code */
 		break;
 	case SYS_FILESIZE:
-		filesize(args[1]);
+		f->eax = filesize(args[1]);
 		/* code */
 		break;
 	case SYS_EXIT:
@@ -109,10 +109,13 @@ int open(const char *file){
 
 void close (int fd) {
 	struct thread *cur = thread_current();
-	if ( 1 < fd < 128) {
+	if ( fd >= 2 && fd < 128) {
 		return;
 	}
-	file_close(cur->fd_table[fd]);
+	if (cur->fd_table[fd] != NULL) {
+    	file_close(cur->fd_table[fd]);
+    	cur->fd_table[fd] = NULL;
+	}
 }
 
 int write (int fd, const void *buffer, unsigned size){
@@ -120,9 +123,9 @@ int write (int fd, const void *buffer, unsigned size){
 	if (fd == 1) { // STDOUT
 		putbuf(buffer, size);
 		return size;
-	} else if ( 1 < fd < 128)  {
+	} else if (fd >= 2 && fd < 128)  {
 		struct file *file = cur->fd_table[fd];
-		int write_size = file_write(file, buffer);
+		int write_size = file_write(file, buffer, size);
 		return write_size;
 	}
 	return -1;
@@ -138,8 +141,12 @@ int read (int fd, const void* buffer, unsigned size){
 
 	struct thread *cur = thread_current();
 	if (fd == 0) { // stdin
-		input_getc();
-	} else if (1 < fd < 128) {
+		char *buf = (char *) buffer;
+		for (unsigned i = 0; i < size; i++) {
+			buf[i] = input_getc();
+		}
+    return size;
+	} else if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
 		int bytes_read = file_read(file, buffer, size);
 		return bytes_read;
@@ -154,7 +161,7 @@ bool remove(const char *file_name){
 
 int filesize(int fd){
 	struct thread *cur = thread_current();
-	if (1 < fd < 128) {
+	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
 		return file_length(file);
 	}
@@ -163,29 +170,29 @@ int filesize(int fd){
 
 void seek(int fd, unsigned position){
 	struct thread *cur = thread_current();
-	if (1 < fd < 128) {
+	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
 		file_seek(file, position);
 	}
-	return -1;
+	return; 
 
 }
 
 unsigned tell(int fd){
 	struct thread *cur = thread_current();
-	if (1 < fd < 128) {
+	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
 		return file_tell(file);
 	}
-	return -1;
-
+	return;
 }	
 
 void exit(int status){
 	struct thread *cur = thread_current();
-	cur->fd_table;
-	for (int i = 2; cur->fd_table[i] != NULL; i++) {
-		close(i);
+	for (int i = 2; i < 128; i++) {
+		if (cur->fd_table != NULL)  {
+			close(i);
+		}
 	}
 	cur->status = status;
 	thread_exit();
