@@ -41,23 +41,42 @@ bool create(const char *file, unsigned initial_size){
 }
 
 int open(const char *file){
-	int fds[128] = thread_current()->fd;
-	struct file* file = filesys_open(file);
-	if(fid != -1){
-		append(fds, fid);
+	struct thread *cur = thread_current();
+	struct file *file = filesys_open(file);
+	for (int i = 2; i < 128; i++) { 
+		if (cur->fd_table[i] == NULL) {
+			 cur->fd_table[i] = file;
+			 return i;
+		}		
 	}
-	return fid;
+	return -1;
 }
 
-void close (int fd){
-
+void close (int fd) {
+	struct thread *cur = thread_current();
+	if (fd > 128 || fd < 2) {
+		return;
+	}
+	file_close(cur->fd_table[fd]);
 }
 
 int write (int fd, const void *buffer, unsigned size){
-
+	struct thread *cur = thread_current();
+	if (fd == 1) { // STDOUT
+		putbuf(buffer, size);
+		return size;
+	} else if (fd > 1) {
+		struct file *file = cur->fd_table[fd];
+		int write_id = file_write(file, buffer);
+		return write_id;
+	}
+	return -1;
 }
 
 int read (int fd, const void* buffer, unsigned size){
+	if (fd == 0) { // stdin
+		input_getc()
+	}
 
 }
 

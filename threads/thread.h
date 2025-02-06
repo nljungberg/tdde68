@@ -92,8 +92,7 @@ struct thread {
 	/* Shared between thread.c and synch.c. */
 	struct list_elem elem; /* List element. */
 
-	int fd[128];
-
+	struct file *fd_table[128];
 
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
