@@ -4,13 +4,13 @@
 /*  A program that does nothing, a classic no-op.
  *
  * Compile it, and run it from userprog/ with the following command:
-	 pintos --filesys-size=2 -p ../examples/noop -a binary -- -f -q run 'binary -s 17'
+pintos --filesys-size=2 -p ../examples/noop -a binary -- -f -q run 'binary -s 17'
 */
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-	(void)argc;
-	(void)argv;
+	(void) argc;
+	(void) argv;
 
 	return EXIT_SUCCESS;
 }
