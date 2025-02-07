@@ -36,13 +36,12 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 {
 	int syscall_nr = *((int *) f->esp);
 	int *args = (int *) f->esp;
-	printf("%d\n", args[0]);
 	switch (syscall_nr) {
 		case SYS_WRITE: 
-			printf("%s\n", "I'm barley not here");
 			f->eax = syscall_write(args[1], args[2], args[3]);
 			/* code */
 			break;
+		
 		case SYS_CLOSE:
 			syscall_close(args[1]);
 			/* code */
@@ -51,34 +50,43 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			f->eax = syscall_create(args[1], args[2]);
 			/* code */
 			break;
-		case SYS_HALT:	
+		
+		case SYS_HALT:
 			syscall_halt();
 			/* code */
 			break;
+		
 		case SYS_OPEN:
 			f->eax = syscall_open(args[1]);
 			/* code */
 			break;
+		
 		case SYS_READ:
+			
 			f->eax = syscall_read(args[1], args[2], args[3]);
 			/* code */
 			break;
+		
 		case SYS_SLEEP:
 			syscall_sleep(args[1]);
 			/* code */
 			break;
+		
 		case SYS_SEEK:
 			syscall_seek(args[1], args[2]);
 			/* code */
 			break;
+		
 		case SYS_TELL:
 			f->eax = syscall_tell(args[1]);
 			/* code */
 			break;
+		
 		case SYS_REMOVE:
 			f->eax = syscall_remove(args[1]);
 			/* code */
 			break;
+		
 		case SYS_FILESIZE:
 			f->eax = syscall_filesize(args[1]);
 			/* code */
@@ -106,13 +114,17 @@ void syscall_halt(void){
 }
 
 bool syscall_create(const char *file, unsigned initial_size){
-	return filesys_create(file, initial_size);
+	bool comp = filesys_create(file, initial_size);
+	return comp;
 }
 
 int syscall_open(const char *file){
 	struct thread *cur = thread_current();
 	struct file *cur_file = filesys_open(file);
-	for (int i = 2; i < 128; i++) { 
+	if (cur_file == NULL) {
+		return -1;
+	}
+	for (int i = 2; i <= 128; i++) { 
 		if (cur->fd_table[i] == NULL) {
 			 cur->fd_table[i] = cur_file;
 			 return i;
@@ -123,7 +135,7 @@ int syscall_open(const char *file){
 
 void syscall_close (int fd) {
 	struct thread *cur = thread_current();
-	if ( fd >= 2 && fd < 128) {
+	if ( fd < 2 && fd > 128) {
 		return;
 	}
 	if (cur->fd_table[fd] != NULL) {
@@ -139,13 +151,12 @@ int syscall_write (int fd, const void *buffer, unsigned size){
 		putbuf(buffer, size);
 		
 		return size;
-	} else if (fd >= 2 && fd < 128)  {
+	} else if (fd >= 2 && fd <= 128)  {
 		struct file *file = cur->fd_table[fd];
 		int write_size = file_write(file, buffer, size);
 		
 		return write_size;
 	}
-	
 	return -1;
 }
 
@@ -158,10 +169,12 @@ int syscall_read (int fd, void *buffer, unsigned size){
 			buf[i] = input_getc();
 		}
     	return size;
-	} else if (fd >= 2 && fd < 128) {
-		struct file *file = cur->fd_table[fd];
-		int bytes_read = file_read(file, buffer, size);
-		return bytes_read;
+	} else if (fd >= 2 && fd <= 128) {
+		if(cur->fd_table[fd] != NULL){
+			struct file *file = cur->fd_table[fd];
+			int bytes_read = file_read(file, buffer, size);
+			return bytes_read;
+		}
 	}
 	return -1;
 

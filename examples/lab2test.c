@@ -73,9 +73,7 @@ int main(void)
 
 	TITLE("TEST 2: Creating file\n");
 	created = create("test0", strlen(testdata));
-	printf("%s\n", "I'm not here");
 	if (!created) {
-		printf("%s\n", "I'm here");
 		ERROR("Could not create file \"test0\", does it already exist?\n");
 	}
 
