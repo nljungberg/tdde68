@@ -79,12 +79,6 @@ static void start_process(void* cmd_line_)
 	if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
 	if_.cs = SEL_UCSEG;
 	if_.eflags = FLAG_IF | FLAG_MBS;
-<<<<<<< HEAD
-=======
-
-	// Note: load requires the file name only, not the entire cmd_line
-	success = load(t->name, &if_.eip, &if_.esp);
->>>>>>> liu/main
 
 
 	// Note: load requires the file name only, not the entire cmd_line

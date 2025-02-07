@@ -5,7 +5,9 @@
 #include "devices/timer.h"
 #include "devices/shutdown.h"
 #include "filesys/filesys.h"
-
+#include "lib/user/syscall.h"
+#include "lib/kernel/stdio.h"
+#include "filesys/file.h"
 #include <stdio.h>
 #include <syscall-nr.h> 
 
@@ -114,8 +116,7 @@ void syscall_halt(void){
 }
 
 bool syscall_create(const char *file, unsigned initial_size){
-	bool comp = filesys_create(file, initial_size);
-	return comp;
+	return filesys_create(file, initial_size);
 }
 
 int syscall_open(const char *file){
@@ -124,7 +125,7 @@ int syscall_open(const char *file){
 	if (cur_file == NULL) {
 		return -1;
 	}
-	for (int i = 2; i <= 128; i++) { 
+	for (int i = 2; i < 128; i++) { 
 		if (cur->fd_table[i] == NULL) {
 			 cur->fd_table[i] = cur_file;
 			 return i;
@@ -135,13 +136,14 @@ int syscall_open(const char *file){
 
 void syscall_close (int fd) {
 	struct thread *cur = thread_current();
-	if ( fd < 2 && fd > 128) {
+	if ( fd < 2 || fd >= 128) {
 		return;
 	}
 	if (cur->fd_table[fd] != NULL) {
-    	file_close(cur->fd_table[fd]);
-    	cur->fd_table[fd] = NULL;
+		file_close(cur->fd_table[fd]);
+		cur->fd_table[fd] = NULL;
 	}
+	return;
 }
 
 int syscall_write (int fd, const void *buffer, unsigned size){
@@ -149,10 +151,11 @@ int syscall_write (int fd, const void *buffer, unsigned size){
 	struct thread *cur = thread_current();
 	if (fd == 1) { // STDOUT
 		putbuf(buffer, size);
-		
 		return size;
-	} else if (fd >= 2 && fd <= 128)  {
+	} else if (fd >= 2 && fd < 128)  {
 		struct file *file = cur->fd_table[fd];
+		    if (file == NULL)
+            return -1;
 		int write_size = file_write(file, buffer, size);
 		
 		return write_size;
@@ -167,9 +170,10 @@ int syscall_read (int fd, void *buffer, unsigned size){
 		char *buf = (char *) buffer;
 		for (unsigned i = 0; i < size; i++) {
 			buf[i] = input_getc();
+			putbuf(&buf[i], 1);
 		}
     	return size;
-	} else if (fd >= 2 && fd <= 128) {
+	} else if (fd >= 2 && fd < 128) {
 		if(cur->fd_table[fd] != NULL){
 			struct file *file = cur->fd_table[fd];
 			int bytes_read = file_read(file, buffer, size);
@@ -177,7 +181,6 @@ int syscall_read (int fd, void *buffer, unsigned size){
 		}
 	}
 	return -1;
-
 }
 
 bool syscall_remove(const char *file_name){
@@ -215,7 +218,7 @@ unsigned syscall_tell(int fd){
 void syscall_exit(int status){
 	struct thread *cur = thread_current();
 	for (int i = 2; i < 128; i++) {
-		if (cur->fd_table != NULL)  {
+		if (cur->fd_table[i] != NULL)  {
 			syscall_close(i);
 		}
 	}
