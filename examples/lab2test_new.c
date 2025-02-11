@@ -181,8 +181,8 @@ int main(int argc, char *argv[])
 		printf("Will try to close 'STDIN_FILENO' and then read from it.\n");
 		printf("Write some input please: ");
 		close(STDIN_FILENO);
-		result = get_line(buffer, 128);
 		printf("Here\n");
+		result = get_line(buffer, 128);
 		verify(result < 128 && result == (int) strlen(buffer));
 
 		printf("Will try to close 'STDOUT_FILENO' and then write to it.\n");

@@ -170,6 +170,9 @@ int syscall_read (int fd, void *buffer, unsigned size){
 		char *buf = (char *) buffer;
 		for (unsigned i = 0; i < size; i++) {
 			buf[i] = input_getc();
+			if(buf[i] == '\r'){
+				buf[i] = '\n';
+			}
 			putbuf(&buf[i], 1);
 		}
     	return size;
@@ -191,7 +194,9 @@ int syscall_filesize(int fd){
 	struct thread *cur = thread_current();
 	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
-		return file_length(file);
+		if(file != NULL){
+			return file_length(file);
+		}
 	}
 	return -1;
 }
@@ -200,7 +205,13 @@ void syscall_seek(int fd, unsigned position){
 	struct thread *cur = thread_current();
 	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
-		file_seek(file, position);
+		if(file != NULL){
+			unsigned file_len = file_length(file);
+			if (position > file_len) {
+				position = file_len;
+			}
+			file_seek(file, position);
+		}
 	}
 	return; 
 
@@ -210,7 +221,9 @@ unsigned syscall_tell(int fd){
 	struct thread *cur = thread_current();
 	if (fd >= 2 && fd < 128) {
 		struct file *file = cur->fd_table[fd];
-		return file_tell(file);
+		if(file != NULL){
+			return file_tell(file);
+		}
 	}
 	return 0;
 }	
