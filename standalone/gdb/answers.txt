@@ -18,3 +18,28 @@ andra svar. page 8 lab0
 2. det har med målet på sys_write alltså vilken vi vill kalla sys_write på, file descriptor, stdout
 3. "You got it, user your debugging skills during the labs!\n" vi använde kommandot
      p *(char **) (f->esp + 8)
+
+
+
+Lab2 frågor:
+
+0. a) The idea is that the user should not have access to the functions so that they can't mess them up and so we have them as a standard.
+b) Because of security. 
+
+1. a) WE get an argument when it's called so we can distinguish whitch system_call to use.
+b) The arguments are saved at esp, esp + 4, esp+8, and so on. We just have to de refrence the stack pointer at the right memory location in order to get the arguments.
+
+2. a)user-mode stack is located from 0 to the PHYS_BASE.  Kernerl-mode occupies the memory from PHYS_BASE up to 4GB. 
+b) the int_frame * that is given to syscall_handler contains the value that the user-mode stack pointer is pointing 
+to witch makes it possible to read the arguments there, but we need to be carefull.
+c) We need one for user-based programms and one for kernel based programms.
+
+3. a) The user-mode stack, f->esp
+b)from the sep value sent in int_frame*
+c)When it points to 0x0 or a value that isn't mapped in the process's memory. if it's a pointer to an adress in kernel memory.
+unmapped user adresses.
+d) We have to controll the pointer and controll that it's under PHYS_BASE and it pointing to a mapped memory place.
+
+4. They are non-negative integers. It starts with 2 (because 0 and 1 are reserved for keyboard and console) and increments for each open file.
+Each process should have a file descriptor table that maps the fid to an actual struct file pointer. Andds every new file to this table with the smalles
+positive integer not already in use. 

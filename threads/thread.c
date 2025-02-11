@@ -279,8 +279,15 @@ void thread_exit(void)
 
 #ifdef USERPROG
 	process_exit();
-#endif
 
+	struct thread *cur = thread_current();
+	for (int i = 2; i < 128; i++) {
+		if (cur->fd_table[i] != NULL)  {
+			syscall_close(i);
+		}
+	}
+	
+#endif
 	/* Remove thread from all threads list, set our status to dying,
 		and schedule another process.  That process will destroy us
 		when it calls thread_schedule_tail(). */
@@ -438,8 +445,22 @@ static void init_thread(struct thread* t, const char* name, int priority)
 
 	memset(t, 0, sizeof *t);
 	t->status = THREAD_BLOCKED;
+
+	// Set the thread name to just the first word in name (command_line)
 	strlcpy(t->name, name, sizeof t->name);
-	t->stack = (uint8_t*) t + PGSIZE;
+
+	/* Run a partial strtok_r. Partial in the way that we aren't calling
+	 * strtok_r again, since we only care about having a NULL-char after the
+	 * first word, any potential chars after that doesn't matter.
+	 * Why it doesn't matter is left as an exercise for the reader.
+	 *
+	 * Also, abusing the t->stack pointer to not have to allocate more memory
+	 * for a save_ptr we wouldn't use. Why is this fine?
+	 * Don't abuse pointers like this is your code.
+	 */
+	strtok_r(t->name, " ", (char **) &(t->stack));
+
+	t->stack = (uint8_t *) t + PGSIZE;
 	t->priority = priority;
 	t->magic = THREAD_MAGIC;
 

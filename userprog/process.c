@@ -24,6 +24,7 @@ static thread_func start_process NO_RETURN;
 static bool load(const char* file_name, void (**eip)(void), void** esp);
 static void dump_stack(const void* esp);
 
+
 /* Starts a new thread running a user program loaded from
 	CMD_LINE.  The new thread may be scheduled (and may even exit)
 	before process_execute() returns.  Returns the new process's
@@ -53,6 +54,7 @@ static void start_process(void* cmd_line_)
 {
 	char* cmd_line = cmd_line_;
 	struct intr_frame if_;
+	struct thread *t = thread_current();
 	bool success;
 
 	int argc = 0;
@@ -137,7 +139,6 @@ static void start_process(void* cmd_line_)
 
 	if_.esp = temp_esp;	
 
-	dump_stack(if_.esp);
 
 	palloc_free_page(cmd_line);
 

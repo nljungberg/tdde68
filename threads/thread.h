@@ -92,14 +92,20 @@ struct thread {
 	/* Shared between thread.c and synch.c. */
 	struct list_elem elem; /* List element. */
 
+	//struct file *fd_table[128];
+	
+
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint32_t* pagedir; /* Page directory. */
+	struct file *fd_table[128];
+	
 #endif
 
 	/* Owned by thread.c. */
 	unsigned magic; /* Detects stack overflow. */
 };
+
 
 /* If false (default), use round-robin scheduler.
 	If true, use multi-level feedback queue scheduler.

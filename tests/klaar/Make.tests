@@ -1,7 +1,7 @@
 # -*- makefile -*-
 
-tests/%.output: FSDISK = 2
-tests/%.output: PUTFILES = $(filter-out os.dsk, $^)
+tests/%.output: FILESYSSOURCE = --filesys-size=2
+tests/%.output: PUTFILES = $(filter-out kernel.bin loader.bin, $^)
 
 tests/klaar_TESTS = $(addprefix tests/klaar/,read-bad-buf low-mem \
 exec-corrupt pfs)
@@ -34,5 +34,5 @@ $(foreach prog,$(tests/klaar_PROGS),$(eval $(prog)_SRC += tests/lib.c))
 
 tests/klaar/low-mem.output: KERNELFLAGS = -tcl=3
 
-tests/klaar/pfs.output: TIMEOUT = 300
+tests/klaar/pfs.output: TIMEOUT = 180
 tests/klaar/pfs.output: KERNELFLAGS = -S
