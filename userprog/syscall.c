@@ -229,11 +229,6 @@ unsigned syscall_tell(int fd){
 
 void syscall_exit(int status){
 	struct thread *cur = thread_current();
-	for (int i = 2; i < 128; i++) {
-		if (cur->fd_table[i] != NULL)  {
-			syscall_close(i);
-		}
-	}
 	cur->status = status;
 	thread_exit();
 }

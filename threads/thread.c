@@ -279,8 +279,15 @@ void thread_exit(void)
 
 #ifdef USERPROG
 	process_exit();
-#endif
 
+	struct thread *cur = thread_current();
+	for (int i = 2; i < 128; i++) {
+		if (cur->fd_table[i] != NULL)  {
+			syscall_close(i);
+		}
+	}
+	
+#endif
 	/* Remove thread from all threads list, set our status to dying,
 		and schedule another process.  That process will destroy us
 		when it calls thread_schedule_tail(). */
