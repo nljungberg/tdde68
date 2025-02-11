@@ -157,7 +157,6 @@ int syscall_write (int fd, const void *buffer, unsigned size){
 		    if (file == NULL)
             return -1;
 		int write_size = file_write(file, buffer, size);
-		
 		return write_size;
 	}
 	return -1;
@@ -235,7 +234,7 @@ void syscall_exit(int status){
 			syscall_close(i);
 		}
 	}
-	cur->status = THREAD_DYING;
+	cur->status = status;
 	thread_exit();
 }
 
