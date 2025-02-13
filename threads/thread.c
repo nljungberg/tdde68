@@ -48,7 +48,7 @@ struct kernel_thread_frame {
 
 /* Statistics. */
 static long long idle_ticks;	 /* # of timer ticks spent idle. */
-static long long kernel_ticks; /* # of timer ticks in kernel threads. */
+static long long kernel_ticks; /* # of ticks in kernel threads. */
 static long long user_ticks;	 /* # of timer ticks in user programs. */
 
 /* Scheduling. */

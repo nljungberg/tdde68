@@ -43,3 +43,11 @@ d) We have to controll the pointer and controll that it's under PHYS_BASE and it
 4. They are non-negative integers. It starts with 2 (because 0 and 1 are reserved for keyboard and console) and increments for each open file.
 Each process should have a file descriptor table that maps the fid to an actual struct file pointer. Andds every new file to this table with the smalles
 positive integer not already in use. 
+
+Lab3 frågor:
+1) Busy waiting är att medans operating system väntar så finns det en loop som körs om och om  igen. Alltså programmet väntar som i en while-loop. Det bör 
+undvikas då det tar massa processor kraft. 
+2) Yield är då programmet väntar på att en visst värde uppdateras eller att den väntar på bogot annat, lite som busy waiting. Medans sleep har en bestämd tid som den ska
+"sova" innan programmet börjar köra igen.
+3) Låser varnadra so  i en cirkel där alla väntas på att låsas upp av ett låst programm är Deadlock.
+
