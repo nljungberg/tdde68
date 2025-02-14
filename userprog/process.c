@@ -10,6 +10,7 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "userprog/gdt.h"
+#include "threads/synch.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
 
@@ -20,10 +21,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 static thread_func start_process NO_RETURN;
 static bool load(const char* file_name, void (**eip)(void), void** esp);
 static void dump_stack(const void* esp);
 
+
+struct exec_helper{
+	bool load_success;
+	void* cmd_line;
+	struct semaphore load_sema;
+}
 
 /* Starts a new thread running a user program loaded from
 	CMD_LINE.  The new thread may be scheduled (and may even exit)
@@ -41,16 +49,23 @@ tid_t process_execute(const char* cmd_line)
 		return TID_ERROR;
 	strlcpy(cl_copy, cmd_line, PGSIZE);
 
+	struct exec_helper *H = malloc(sizeof *H);
+	H->cmd_line = malloc(strlen(cmd_line)+1);
+	sema_init(&H->load_sema, 0);
+	H->load_success = false;
 	/* Create a new thread to execute FILE_NAME. */
-	tid = thread_create(cmd_line, PRI_DEFAULT, start_process, cl_copy);
+	tid = thread_create(cmd_line, PRI_DEFAULT, start_process, &H);
+	
 	if (tid == TID_ERROR)
 		palloc_free_page(cl_copy);
+	
+	sema_down(&H->load_sema);
 	return tid;
 }
 
 /* A thread function that loads a user process and starts it
 	running. */
-static void start_process(void* cmd_line_)
+static void start_process(void* cmd_line_, void* aux)
 {
 	char* cmd_line = cmd_line_;
 	struct intr_frame if_;
@@ -86,6 +101,7 @@ static void start_process(void* cmd_line_)
 	/* If load failed, quit. */
 	if (!success) {
 		palloc_free_page(cmd_line);
+		sema_up(aux);
 		thread_exit();
 	}
 

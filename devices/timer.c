@@ -82,8 +82,8 @@ int64_t timer_elapsed(int64_t then)
 
 bool wakeup_time_less(const struct list_elem* a, const struct list_elem* b, void *aux)
 {
-    struct thread* thread_a = list_entry(a, struct thread, elem);
-    struct thread* thread_b = list_entry(b, struct thread, elem);
+    struct thread* thread_a = list_entry(a, struct thread, sleep_elem);
+    struct thread* thread_b = list_entry(b, struct thread, sleep_elem);
     return thread_a->wakeup_time < thread_b->wakeup_time;
 }
 
@@ -172,7 +172,7 @@ static void timer_interrupt(struct intr_frame* args UNUSED)
 	thread_tick();
 
 	while(!list_empty(&waiting_list)){
-		struct thread* t = list_entry(list_front(&waiting_list), struct thread, elem);
+		struct thread* t = list_entry(list_front(&waiting_list), struct thread, sleep_elem);
 		if(t->wakeup_time <= ticks){
 			list_pop_front(&waiting_list);
 			thread_unblock(t);

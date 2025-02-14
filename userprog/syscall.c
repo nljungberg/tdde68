@@ -8,6 +8,7 @@
 #include "lib/user/syscall.h"
 #include "lib/kernel/stdio.h"
 #include "filesys/file.h"
+#include "userprog/process.c"
 #include <stdio.h>
 #include <syscall-nr.h> 
 
@@ -33,6 +34,7 @@ int syscall_filesize(int fd);
 void syscall_seek(int fd, unsigned position);
 unsigned syscall_tell(int fd);
 void syscall_exit(int status);
+pid_t syscall_exec(const *cmd_line);
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
@@ -64,7 +66,6 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			break;
 		
 		case SYS_READ:
-			
 			f->eax = syscall_read(args[1], args[2], args[3]);
 			/* code */
 			break;
@@ -95,6 +96,10 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			break;
 		case SYS_EXIT:
 			syscall_exit(args[1]);
+			/* code */
+			break;
+		case SYS_EXEC:
+			f->eax = syscall_exec(args);
 			/* code */
 			break;
 		default:
@@ -231,5 +236,10 @@ void syscall_exit(int status){
 	struct thread *cur = thread_current();
 	cur->status = status;
 	thread_exit();
+}
+
+pid_t syscall_exec(const *cmd_line){
+	return process_execute(cmd_line);
+	
 }
 
