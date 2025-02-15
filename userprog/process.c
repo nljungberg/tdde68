@@ -31,7 +31,7 @@ struct exec_helper{
 	bool load_success;
 	void* cmd_line;
 	struct semaphore load_sema;
-}
+};
 
 /* Starts a new thread running a user program loaded from
 	CMD_LINE.  The new thread may be scheduled (and may even exit)
@@ -65,9 +65,10 @@ tid_t process_execute(const char* cmd_line)
 
 /* A thread function that loads a user process and starts it
 	running. */
-static void start_process(void* cmd_line_, void* aux)
+static void start_process(void* aux)
 {
-	char* cmd_line = cmd_line_;
+	struct exec_helper *helper = (struct exec_helper *) aux;
+	char* cmd_line = helper->cmd_line;
 	struct intr_frame if_;
 	struct thread *t = thread_current();
 	bool success;
@@ -101,9 +102,13 @@ static void start_process(void* cmd_line_, void* aux)
 	/* If load failed, quit. */
 	if (!success) {
 		palloc_free_page(cmd_line);
-		sema_up(aux);
+		sema_up(&helper->load_sema);
 		thread_exit();
 	}
+
+	helper->load_success = true;
+	sema_up(&helper->load_sema);
+
 
 	void* temp_esp = if_.esp;
 	char *argv[32];

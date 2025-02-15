@@ -8,7 +8,7 @@
 #include "lib/user/syscall.h"
 #include "lib/kernel/stdio.h"
 #include "filesys/file.h"
-#include "userprog/process.c"
+#include "userprog/process.h"
 #include <stdio.h>
 #include <syscall-nr.h> 
 
@@ -240,6 +240,5 @@ void syscall_exit(int status){
 
 pid_t syscall_exec(const *cmd_line){
 	return process_execute(cmd_line);
-	
 }
 
