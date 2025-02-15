@@ -50,16 +50,23 @@ tid_t process_execute(const char* cmd_line)
 	strlcpy(cl_copy, cmd_line, PGSIZE);
 
 	struct exec_helper *H = malloc(sizeof *H);
-	H->cmd_line = malloc(strlen(cmd_line)+1);
+	H->cmd_line = cl_copy;  
 	sema_init(&H->load_sema, 0);
 	H->load_success = false;
 	/* Create a new thread to execute FILE_NAME. */
-	tid = thread_create(cmd_line, PRI_DEFAULT, start_process, &H);
+	tid = thread_create(cmd_line, PRI_DEFAULT, start_process, H);
 	
-	if (tid == TID_ERROR)
+	if (tid == TID_ERROR) {
 		palloc_free_page(cl_copy);
-	
+		free(H);
+		return TID_ERROR;
+	}
 	sema_down(&H->load_sema);
+	if(H->load_success == false){
+		free(H);
+		return -1;
+	}
+	free(H);
 	return tid;
 }
 
