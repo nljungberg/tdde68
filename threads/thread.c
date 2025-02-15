@@ -177,8 +177,9 @@ tid_t thread_create(const char* name, int priority, thread_func* function, void*
 
 	/* Allocate thread. */
 	t = palloc_get_page(PAL_ZERO);
-	if (t == NULL)
+	if (t == NULL){
 		return TID_ERROR;
+	}
 
 	/* Initialize thread. */
 	init_thread(t, name, priority);
@@ -231,7 +232,6 @@ void thread_block(void)
 void thread_unblock(struct thread* t)
 {
 	enum intr_level old_level;
-
 	ASSERT(is_thread(t));
 
 	old_level = intr_disable();

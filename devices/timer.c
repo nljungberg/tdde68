@@ -95,7 +95,7 @@ void timer_sleep(int64_t ticks)
 	enum intr_level old_level = intr_disable(); 
 	int64_t start = timer_ticks();
 	thread_current()->wakeup_time = start + ticks;
-	list_insert_ordered(&waiting_list, &thread_current()->elem, wakeup_time_less, NULL);
+	list_insert_ordered(&waiting_list, &thread_current()->sleep_elem, wakeup_time_less, NULL);
 	thread_block();
 	intr_set_level(old_level);
 	ASSERT(intr_get_level() == INTR_ON);

@@ -9,6 +9,7 @@
 #include "lib/kernel/stdio.h"
 #include "filesys/file.h"
 #include "userprog/process.h"
+#include "threads/palloc.h"
 #include <stdio.h>
 #include <syscall-nr.h> 
 
@@ -99,7 +100,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
 		case SYS_EXEC:
-			f->eax = syscall_exec(args);
+			f->eax = syscall_exec(args[1]);
 			/* code */
 			break;
 		default:
@@ -239,6 +240,7 @@ void syscall_exit(int status){
 }
 
 pid_t syscall_exec(const *cmd_line){
-	return process_execute(cmd_line);
+	pid_t pid = process_execute(cmd_line);
+	return pid;
 }
 

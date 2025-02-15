@@ -18,8 +18,8 @@
 #include <inttypes.h>
 #include <round.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 
 static thread_func start_process NO_RETURN;
@@ -50,11 +50,12 @@ tid_t process_execute(const char* cmd_line)
 	strlcpy(cl_copy, cmd_line, PGSIZE);
 
 	struct exec_helper *H = malloc(sizeof *H);
-	H->cmd_line = cl_copy;  
+	H->cmd_line = cl_copy;
 	sema_init(&H->load_sema, 0);
 	H->load_success = false;
 	/* Create a new thread to execute FILE_NAME. */
 	tid = thread_create(cmd_line, PRI_DEFAULT, start_process, H);
+
 	
 	if (tid == TID_ERROR) {
 		palloc_free_page(cl_copy);
@@ -64,6 +65,7 @@ tid_t process_execute(const char* cmd_line)
 	sema_down(&H->load_sema);
 	if(H->load_success == false){
 		free(H);
+	
 		return -1;
 	}
 	free(H);
@@ -74,10 +76,10 @@ tid_t process_execute(const char* cmd_line)
 	running. */
 static void start_process(void* aux)
 {
-	struct exec_helper *helper = (struct exec_helper *) aux;
+	struct exec_helper *helper =  aux;
 	char* cmd_line = helper->cmd_line;
 	struct intr_frame if_;
-	struct thread *t = thread_current();
+	//struct thread *t = thread_current();
 	bool success;
 
 	int argc = 0;
@@ -103,19 +105,16 @@ static void start_process(void* aux)
 	if_.cs = SEL_UCSEG;
 	if_.eflags = FLAG_IF | FLAG_MBS;
 
-
 	// Note: load requires the file name only, not the entire cmd_line
 	success = load(file_name, &if_.eip, &if_.esp);
+	helper->load_success = success;
+	sema_up(&helper->load_sema);
+
 	/* If load failed, quit. */
 	if (!success) {
 		palloc_free_page(cmd_line);
-		sema_up(&helper->load_sema);
 		thread_exit();
 	}
-
-	helper->load_success = true;
-	sema_up(&helper->load_sema);
-
 
 	void* temp_esp = if_.esp;
 	char *argv[32];
@@ -170,7 +169,6 @@ static void start_process(void* aux)
 
 	palloc_free_page(cmd_line);
 
-	printf("%s", "We are done with start_rprocess");
 
 
 
