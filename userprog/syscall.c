@@ -11,7 +11,9 @@
 #include "userprog/process.h"
 #include "threads/palloc.h"
 #include <stdio.h>
-#include <syscall-nr.h> 
+#include <syscall-nr.h>
+#include "userprog/pagedir.h"
+#include "threads/vaddr.h"
 
 static void syscall_handler(struct intr_frame*);
 
@@ -41,6 +43,10 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 {
 	int syscall_nr = *((int *) f->esp);
 	int *args = (int *) f->esp;
+	if (!is_user_vaddr(args))
+		syscall_exit(-1);
+
+
 	switch (syscall_nr) {
 		case SYS_WRITE: 
 			f->eax = syscall_write(args[1], args[2], args[3]);
@@ -239,13 +245,13 @@ unsigned syscall_tell(int fd){
 void syscall_exit(int status){
 	struct thread *cur = thread_current();
     if (cur->own_status != NULL) {
-    	cur->own_status->exit_satus = status;
+    	cur->own_status->exit_status = status;
     	cur->own_status->alive_count--; // child is now dead decrement alive count
     	sema_up(&cur->own_status->load_sema);
         if (cur->own_status->alive_count == 0) {
 			free(cur->own_status);
 		}
-    	printf("%s: exit(%d)\n", cur->thread_name, status);
+    	printf("%s: exit(%d)\n", "balls", status);
 	}
 	thread_exit();
 }

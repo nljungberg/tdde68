@@ -35,13 +35,7 @@ struct exec_helper{
     struct parent_child* p_child; // so we are able to access via aux
 };
 
-struct parent_child {
-  	tid_t tid;
-	int exit_status;
-    int alive_count; // 2 means both parent and child are alive, 1 only parent, 0 both dead
-	struct list_elem elem;
-	struct semaphore load_sema;
-};
+
 
 /* Starts a new thread running a user program loaded from
 	CMD_LINE.  The new thread may be scheduled (and may even exit)

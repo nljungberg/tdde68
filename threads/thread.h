@@ -5,6 +5,7 @@
 #include <list.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include "threads/synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status {
@@ -102,8 +103,16 @@ struct thread {
 	/* Owned by userprog/process.c. */
 	uint32_t* pagedir; /* Page directory. */
 	struct file *fd_table[128];
-    struct parent_child *own_status;
     struct list children; // holds parent_child structs
+	struct parent_child {
+		tid_t tid;
+		int exit_status;
+		int alive_count;
+		struct list_elem elem;
+		struct semaphore load_sema;
+	};
+	struct parent_child *own_status;
+
 #endif
 
 	/* Owned by thread.c. */
