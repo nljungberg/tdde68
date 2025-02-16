@@ -103,6 +103,9 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			f->eax = syscall_exec(args[1]);
 			/* code */
 			break;
+        case SYS_WAIT:
+            f->eax = syscall_wait(args[1]);
+			break;
 		default:
 			break;
 		}
@@ -235,7 +238,15 @@ unsigned syscall_tell(int fd){
 
 void syscall_exit(int status){
 	struct thread *cur = thread_current();
-	cur->status = status;
+    if (cur->own_status != NULL) {
+    	cur->own_status->exit_satus = status;
+    	cur->own_status->alive_count--; // child is now dead decrement alive count
+    	sema_up(&cur->own_status->load_sema);
+        if (cur->own_status->alive_count == 0) {
+			free(cur->own_status);
+		}
+    	printf("%s: exit(%d)\n", cur->thread_name, status);
+	}
 	thread_exit();
 }
 
@@ -243,4 +254,23 @@ pid_t syscall_exec(const *cmd_line){
 	pid_t pid = process_execute(cmd_line);
 	return pid;
 }
+
+int syscall_wait(int pid){
+	struct thread *cur = thread_current();
+    for (struct list_elem *e = list_begin(&cur->children); e != list_end(&cur->children); e = list_next(e)) {
+		struct parent_child *cur_pc = list_entry(e, struct parent_child, elem);
+        if (cur_pc->tid == pid) {
+			sema_down(&cur_pc->load_sema);
+			int status = cur_pc->exit_status;
+			list_remove(e);
+            cur_pc->alive_count--;
+            if (cur_pc->alive_count == 0) {
+				free(cur_pc);
+			}
+			return status;
+		}
+	}
+	return -1;
+}
+
 

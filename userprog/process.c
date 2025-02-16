@@ -13,6 +13,7 @@
 #include "threads/synch.h"
 #include "userprog/pagedir.h"
 #include "userprog/tss.h"
+#include "lib/kernel/list.h"
 
 #include <debug.h>
 #include <inttypes.h>
@@ -30,6 +31,15 @@ static void dump_stack(const void* esp);
 struct exec_helper{
 	bool load_success;
 	void* cmd_line;
+	struct semaphore load_sema;
+    struct parent_child* p_child; // so we are able to access via aux
+};
+
+struct parent_child {
+  	tid_t tid;
+	int exit_status;
+    int alive_count; // 2 means both parent and child are alive, 1 only parent, 0 both dead
+	struct list_elem elem;
 	struct semaphore load_sema;
 };
 
@@ -50,13 +60,22 @@ tid_t process_execute(const char* cmd_line)
 	strlcpy(cl_copy, cmd_line, PGSIZE);
 
 	struct exec_helper *H = malloc(sizeof *H);
+
 	H->cmd_line = cl_copy;
 	sema_init(&H->load_sema, 0);
 	H->load_success = false;
-	/* Create a new thread to execute FILE_NAME. */
+
+	struct thread *parent = thread_current();
 	tid = thread_create(cmd_line, PRI_DEFAULT, start_process, H);
 
-	
+	struct parent_child *p_child = malloc(sizeof(struct parent_child));
+
+	p_child->tid = tid;
+	p_child->exit_status = 0;
+	p_child->alive_count = 2; // both parent and child alive
+	sema_init(&p_child->load_sema, 0);
+	list_push_back(&parent->children, &p_child->elem);
+
 	if (tid == TID_ERROR) {
 		palloc_free_page(cl_copy);
 		free(H);
@@ -65,7 +84,6 @@ tid_t process_execute(const char* cmd_line)
 	sema_down(&H->load_sema);
 	if(H->load_success == false){
 		free(H);
-	
 		return -1;
 	}
 	free(H);
@@ -79,8 +97,8 @@ static void start_process(void* aux)
 	struct exec_helper *helper =  aux;
 	char* cmd_line = helper->cmd_line;
 	struct intr_frame if_;
-	//struct thread *t = thread_current();
-	bool success;
+    thread_current()->own_status = helper->p_child;
+    bool success;
 
 	int argc = 0;
 	char* argv_temp[32]; // Max args is 32

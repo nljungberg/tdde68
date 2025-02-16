@@ -97,12 +97,13 @@ struct thread {
 	struct list_elem sleep_elem;
 
 	int64_t wakeup_time;
-	
 
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint32_t* pagedir; /* Page directory. */
 	struct file *fd_table[128];
+    struct parent_child *own_status;
+    struct list children; // holds parent_child structs
 #endif
 
 	/* Owned by thread.c. */
