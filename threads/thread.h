@@ -97,22 +97,25 @@ struct thread {
 
 	struct list_elem sleep_elem;
 
+	struct list children; // holds parent_child structs
+
+    /* Owned by thread.c. */
+	struct parent_child {
+		struct thread *thread;
+		tid_t tid;
+		int exit_status;
+		int alive_count;
+		struct list_elem elem;
+		struct semaphore exit_sema;
+	};
+
+	struct parent_child *pc;
 	int64_t wakeup_time;
 
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint32_t* pagedir; /* Page directory. */
 	struct file *fd_table[128];
-    struct list children; // holds parent_child structs
-	struct parent_child {
-		tid_t tid;
-		int exit_status;
-		int alive_count;
-		struct list_elem elem;
-		struct semaphore load_sema;
-	};
-	struct parent_child *own_status;
-
 #endif
 
 	/* Owned by thread.c. */

@@ -57,31 +57,40 @@ tid_t process_execute(const char* cmd_line)
 
 	H->cmd_line = cl_copy;
 	sema_init(&H->load_sema, 0);
+
 	H->load_success = false;
 
 	struct thread *parent = thread_current();
-	tid = thread_create(cmd_line, PRI_DEFAULT, start_process, H);
+	struct parent_child *pc = malloc(sizeof(*pc));
+    if (pc == NULL) {
+        return TID_ERROR;
+    }
 
-	struct parent_child *p_child = malloc(sizeof(struct parent_child));
+	pc->exit_status = 0;
+	pc->alive_count = 2; // both parent and child alive
+	 sema_init (&pc->exit_sema, 0);
 
-	p_child->tid = tid;
-	p_child->exit_status = 0;
-	p_child->alive_count = 2; // both parent and child alive
-	sema_init(&p_child->load_sema, 0);
-	list_push_back(&parent->children, &p_child->elem);
 
-	if (tid == TID_ERROR) {
-		palloc_free_page(cl_copy);
-		free(H);
-		return TID_ERROR;
-	}
-	sema_down(&H->load_sema);
-	if(H->load_success == false){
-		free(H);
-		return -1;
-	}
-	free(H);
-	return tid;
+    H->p_child = pc; // Assign the parent_child structure to the helper
+    tid = thread_create(cmd_line, PRI_DEFAULT, start_process, H);
+
+    if (tid == TID_ERROR) {
+        palloc_free_page(cl_copy);
+        free(H);
+        free(pc);
+        return TID_ERROR;
+    }
+    pc->tid = tid;
+    list_push_back (&parent->children, &pc->elem);
+
+    sema_down(&H->load_sema);
+    if(H->load_success == false){
+        free(H);
+        return -1;
+    }
+    free(H);
+
+    return tid;
 }
 
 /* A thread function that loads a user process and starts it
@@ -91,13 +100,14 @@ static void start_process(void* aux)
 	struct exec_helper *helper =  aux;
 	char* cmd_line = helper->cmd_line;
 	struct intr_frame if_;
-    thread_current()->own_status = helper->p_child;
     bool success;
 
-	int argc = 0;
-	char* argv_temp[32]; // Max args is 32
-	
+    struct thread* t = thread_current();
 
+    t->pc = helper->p_child;
+
+    int argc = 0;
+	char* argv_temp[32]; // Max args is 32
 	
 	char *token, *save_ptr;
 	char *file_name;
@@ -205,9 +215,25 @@ static void start_process(void* aux)
 	does nothing. */
 int process_wait(tid_t child_tid UNUSED)
 {
-	for (;;) {
-
+	struct thread *cur = thread_current();
+    for (struct list_elem *e = list_begin(&cur->children);
+             e != list_end(&cur->children);
+             e = list_next(e))
+    {
+		struct parent_child *cur_pc = list_entry(e, struct parent_child, elem);
+        if (cur_pc->tid == child_tid) {
+			sema_down(&cur_pc->exit_sema);
+			int status = cur_pc->exit_status;
+			list_remove(e);
+            cur_pc->alive_count--;
+            if (cur_pc->alive_count == 0) {
+				free(cur_pc);
+			}
+			return status;
+		}
 	}
+	return -1;
+
 }
 
 /* Free the current process's resources. */
@@ -231,7 +257,16 @@ void process_exit(void)
 		pagedir_activate(NULL);
 		pagedir_destroy(pd);
 	}
+    while (!list_empty(&cur->children))
+    {
+        struct list_elem *e = list_pop_front (&cur->children);
+        struct parent_child *pc = list_entry (e, struct parent_child, elem);
+        pc->alive_count--;
+        if (pc->alive_count == 0)
+            free (pc);
+    }
 }
+
 
 /* Sets up the CPU for running user code in the current
 	thread.

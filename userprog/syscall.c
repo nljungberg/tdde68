@@ -37,7 +37,9 @@ int syscall_filesize(int fd);
 void syscall_seek(int fd, unsigned position);
 unsigned syscall_tell(int fd);
 void syscall_exit(int status);
-pid_t syscall_exec(const *cmd_line);
+pid_t syscall_exec(const char *cmd_line);
+int syscall_wait(int pid);
+
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
@@ -48,11 +50,11 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 
 
 	switch (syscall_nr) {
-		case SYS_WRITE: 
+		case SYS_WRITE:
 			f->eax = syscall_write(args[1], args[2], args[3]);
 			/* code */
 			break;
-		
+
 		case SYS_CLOSE:
 			syscall_close(args[1]);
 			/* code */
@@ -61,42 +63,42 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			f->eax = syscall_create(args[1], args[2]);
 			/* code */
 			break;
-		
+
 		case SYS_HALT:
 			syscall_halt();
 			/* code */
 			break;
-		
+
 		case SYS_OPEN:
 			f->eax = syscall_open(args[1]);
 			/* code */
 			break;
-		
+
 		case SYS_READ:
 			f->eax = syscall_read(args[1], args[2], args[3]);
 			/* code */
 			break;
-		
+
 		case SYS_SLEEP:
 			syscall_sleep(args[1]);
 			/* code */
 			break;
-		
+
 		case SYS_SEEK:
 			syscall_seek(args[1], args[2]);
 			/* code */
 			break;
-		
+
 		case SYS_TELL:
 			f->eax = syscall_tell(args[1]);
 			/* code */
 			break;
-		
+
 		case SYS_REMOVE:
 			f->eax = syscall_remove(args[1]);
 			/* code */
 			break;
-		
+
 		case SYS_FILESIZE:
 			f->eax = syscall_filesize(args[1]);
 			/* code */
@@ -106,7 +108,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
 		case SYS_EXEC:
-			f->eax = syscall_exec(args[1]);
+			f->eax = syscall_exec((const char *) args[1]);
 			/* code */
 			break;
         case SYS_WAIT:
@@ -140,11 +142,11 @@ int syscall_open(const char *file){
 	if (cur_file == NULL) {
 		return -1;
 	}
-	for (int i = 2; i < 128; i++) { 
+	for (int i = 2; i < 128; i++) {
 		if (cur->fd_table[i] == NULL) {
 			 cur->fd_table[i] = cur_file;
 			 return i;
-		}		
+		}
 	}
 	return -1;
 }
@@ -162,7 +164,7 @@ void syscall_close (int fd) {
 }
 
 int syscall_write (int fd, const void *buffer, unsigned size){
-	
+
 	struct thread *cur = thread_current();
 	if (fd == 1) { // STDOUT
 		putbuf(buffer, size);
@@ -227,7 +229,7 @@ void syscall_seek(int fd, unsigned position){
 			file_seek(file, position);
 		}
 	}
-	return; 
+	return;
 
 }
 
@@ -240,43 +242,32 @@ unsigned syscall_tell(int fd){
 		}
 	}
 	return 0;
-}	
-
-void syscall_exit(int status){
-	struct thread *cur = thread_current();
-    if (cur->own_status != NULL) {
-    	cur->own_status->exit_status = status;
-    	cur->own_status->alive_count--; // child is now dead decrement alive count
-    	sema_up(&cur->own_status->load_sema);
-        if (cur->own_status->alive_count == 0) {
-			free(cur->own_status);
-		}
-    	printf("%s: exit(%d)\n", "balls", status);
-	}
-	thread_exit();
 }
 
-pid_t syscall_exec(const *cmd_line){
+void syscall_exit(int status){
+	    for (int i=2; i<130; i++){
+        syscall_close(i);
+    }
+
+    struct thread *t = thread_current();
+    if(t->pc == NULL){
+		t->pc->exit_status = status;
+		sema_up(&t->pc->exit_sema);
+
+		t->pc->alive_count--;
+    }
+
+	printf("%s: exit(%d)\n", t->name, t->pc->exit_status);
+    thread_exit();
+}
+
+pid_t syscall_exec(const char *cmd_line){
 	pid_t pid = process_execute(cmd_line);
 	return pid;
 }
 
 int syscall_wait(int pid){
-	struct thread *cur = thread_current();
-    for (struct list_elem *e = list_begin(&cur->children); e != list_end(&cur->children); e = list_next(e)) {
-		struct parent_child *cur_pc = list_entry(e, struct parent_child, elem);
-        if (cur_pc->tid == pid) {
-			sema_down(&cur_pc->load_sema);
-			int status = cur_pc->exit_status;
-			list_remove(e);
-            cur_pc->alive_count--;
-            if (cur_pc->alive_count == 0) {
-				free(cur_pc);
-			}
-			return status;
-		}
-	}
-	return -1;
+	return process_wait(pid);
 }
 
 
