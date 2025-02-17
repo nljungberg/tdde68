@@ -40,6 +40,17 @@ void syscall_exit(int status);
 pid_t syscall_exec(const char *cmd_line);
 int syscall_wait(int pid);
 
+static bool is_valid_user_ptr(const void *ptr) {
+    return ptr != NULL && is_user_vaddr(ptr) && pagedir_get_page(thread_current()->pagedir, ptr) != NULL;
+}
+static bool valid_user_string (const char *str) {
+    if (str == NULL) return false;
+    for (;;) {
+        if (!is_valid_user_ptr(str)) return false;  // check that page is present
+        if (*str == '\0') return true;             // found terminator
+        str++;
+    }
+}
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
@@ -51,15 +62,27 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 
 	switch (syscall_nr) {
 		case SYS_WRITE:
+            if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2]) || !is_valid_user_ptr(&args[3])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_write(args[1], args[2], args[3]);
 			/* code */
 			break;
 
 		case SYS_CLOSE:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
 			syscall_close(args[1]);
 			/* code */
 			break;
 		case SYS_CREATE:
+            if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2])) {
+                syscall_exit(-1);
+            }
+            if (!valid_user_string((const char *) args[1])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_create(args[1], args[2]);
 			/* code */
 			break;
@@ -70,48 +93,81 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			break;
 
 		case SYS_OPEN:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_open(args[1]);
 			/* code */
 			break;
 
 		case SYS_READ:
+            if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2]) || !is_valid_user_ptr(&args[3])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_read(args[1], args[2], args[3]);
 			/* code */
 			break;
 
 		case SYS_SLEEP:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
 			syscall_sleep(args[1]);
 			/* code */
 			break;
 
 		case SYS_SEEK:
+        	if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2])) {
+                syscall_exit(-1);
+            }
 			syscall_seek(args[1], args[2]);
 			/* code */
 			break;
 
 		case SYS_TELL:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_tell(args[1]);
 			/* code */
 			break;
 
 		case SYS_REMOVE:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
+            if (!valid_user_string((const char *) args[1])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_remove(args[1]);
 			/* code */
 			break;
 
 		case SYS_FILESIZE:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_filesize(args[1]);
 			/* code */
 			break;
 		case SYS_EXIT:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
 			syscall_exit(args[1]);
 			/* code */
 			break;
 		case SYS_EXEC:
+            if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
 			f->eax = syscall_exec((const char *) args[1]);
 			/* code */
 			break;
         case SYS_WAIT:
+          	if (!is_valid_user_ptr(&args[1])) {
+                syscall_exit(-1);
+            }
             f->eax = syscall_wait(args[1]);
 			break;
 		default:
@@ -250,7 +306,7 @@ void syscall_exit(int status){
     }
 
     struct thread *t = thread_current();
-    if(t->pc == NULL){
+    if(t->pc != NULL){
 		t->pc->exit_status = status;
 		sema_up(&t->pc->exit_sema);
 

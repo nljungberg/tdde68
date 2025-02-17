@@ -108,7 +108,7 @@ static void start_process(void* aux)
 
     int argc = 0;
 	char* argv_temp[32]; // Max args is 32
-	
+
 	char *token, *save_ptr;
 	char *file_name;
 
@@ -166,10 +166,10 @@ static void start_process(void* aux)
 		*(void**)temp_esp = argv[i];
 		//memcpy(temp_esp, argv[i], sizeof(char *));
 	}
-	
+
 	// this is the argv stack
 	char **argv_on_stack = (char **)temp_esp;
-	
+
 	// push argv on to the stack
 	int size = sizeof(char **);
 	temp_esp -= size;
@@ -186,7 +186,7 @@ static void start_process(void* aux)
 	temp_esp -= size;
     *(void **)temp_esp = 0;
 
-	if_.esp = temp_esp;	
+	if_.esp = temp_esp;
 
 
 	palloc_free_page(cmd_line);
