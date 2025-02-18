@@ -281,7 +281,7 @@ void thread_exit(void)
 	process_exit();
 
 	struct thread *cur = thread_current();
-	for (int i = 2; i < 128; i++) {
+	for (int i = 2; i < 130; i++) {
 		if (cur->fd_table[i] != NULL)  {
 			syscall_close(i);
 		}

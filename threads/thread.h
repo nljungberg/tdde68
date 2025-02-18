@@ -115,7 +115,7 @@ struct thread {
 #ifdef USERPROG
 	/* Owned by userprog/process.c. */
 	uint32_t* pagedir; /* Page directory. */
-	struct file *fd_table[128];
+	struct file *fd_table[130];
 #endif
 
 	/* Owned by thread.c. */

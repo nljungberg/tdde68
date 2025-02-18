@@ -52,38 +52,48 @@ static bool valid_user_string (const char *str) {
     }
 }
 
+static bool valid_user_buffer(const void *buffer, unsigned size){
+	char *buf = (char *) buffer;
+	if (buf == NULL) return false; 
+	for (unsigned i = 0; i < size; i++) {
+		if(!is_valid_user_ptr(buf + i)) return false;
+	}
+	return true;
+}
+
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
-	int syscall_nr = *((int *) f->esp);
+	if (!is_valid_user_ptr(f->esp)) {
+        syscall_exit(-1);
+    }
 	int *args = (int *) f->esp;
-	if (!is_user_vaddr(args))
-		syscall_exit(-1);
 
+	int syscall_nr = args[0];
+	
 
 	switch (syscall_nr) {
 		case SYS_WRITE:
-            if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2]) || !is_valid_user_ptr(&args[3])) {
-                syscall_exit(-1);
-            }
-			f->eax = syscall_write(args[1], args[2], args[3]);
+			void *buf = (void*) args[2];
+			unsigned size = args[3];
+            
+			if(!valid_user_buffer(buf, size)){ 
+				syscall_exit(-1);
+			}
+			f->eax = syscall_write(args[1], buf, size);
 			/* code */
 			break;
 
 		case SYS_CLOSE:
-            if (!is_valid_user_ptr(&args[1])) {
-                syscall_exit(-1);
-            }
 			syscall_close(args[1]);
 			/* code */
 			break;
 		case SYS_CREATE:
-            if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2])) {
-                syscall_exit(-1);
-            }
-            if (!valid_user_string((const char *) args[1])) {
-                syscall_exit(-1);
-            }
-			f->eax = syscall_create(args[1], args[2]);
+            const char *file_name_ = (const char*) args[1];
+        	unsigned  size_ = args[2];
+			if (!valid_user_string(file_name_)) {
+            	syscall_exit(-1);
+			}
+			f->eax = syscall_create(file_name_, size_);
 			/* code */
 			break;
 
@@ -93,53 +103,50 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			break;
 
 		case SYS_OPEN:
-            if (!is_valid_user_ptr(&args[1])) {
-                syscall_exit(-1);
-            }
-			f->eax = syscall_open(args[1]);
+            const char *file = (const char*) args[1];
+        	if (!valid_user_string(file)) {
+            	syscall_exit(-1);
+        	}
+			f->eax = syscall_open(file);
 			/* code */
 			break;
 
 		case SYS_READ:
-            if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2]) || !is_valid_user_ptr(&args[3])) {
-                syscall_exit(-1);
-            }
-			f->eax = syscall_read(args[1], args[2], args[3]);
+            int fd = args[1];
+			void *buffer = (void*) args[2];
+
+			if (!valid_user_buffer(buffer, args[3])) {
+				syscall_exit(-1);
+			}
+			f->eax = syscall_read(fd, buffer, args[3]);
 			/* code */
 			break;
+		
 
 		case SYS_SLEEP:
-            if (!is_valid_user_ptr(&args[1])) {
-                syscall_exit(-1);
-            }
+            
 			syscall_sleep(args[1]);
 			/* code */
 			break;
 
 		case SYS_SEEK:
-        	if (!is_valid_user_ptr(&args[1]) || !is_valid_user_ptr(&args[2])) {
-                syscall_exit(-1);
-            }
+    
 			syscall_seek(args[1], args[2]);
 			/* code */
 			break;
 
 		case SYS_TELL:
-            if (!is_valid_user_ptr(&args[1])) {
-                syscall_exit(-1);
-            }
+            
 			f->eax = syscall_tell(args[1]);
 			/* code */
 			break;
 
 		case SYS_REMOVE:
-            if (!is_valid_user_ptr(&args[1])) {
-                syscall_exit(-1);
-            }
-            if (!valid_user_string((const char *) args[1])) {
-                syscall_exit(-1);
-            }
-			f->eax = syscall_remove(args[1]);
+            const char *file_name = (const char *) args[1];
+			if (!valid_user_string(file_name)) {
+				syscall_exit(-1);
+			}
+			f->eax = syscall_remove(file_name);
 			/* code */
 			break;
 
@@ -158,16 +165,15 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
 		case SYS_EXEC:
-            if (!is_valid_user_ptr(&args[1])) {
-                syscall_exit(-1);
-            }
-			f->eax = syscall_exec((const char *) args[1]);
+             const char *cmd_line = (const char*) args[1];
+			if (!valid_user_string(cmd_line)) {
+				syscall_exit(-1);
+			}
+			f->eax = syscall_exec(cmd_line);
 			/* code */
 			break;
         case SYS_WAIT:
-          	if (!is_valid_user_ptr(&args[1])) {
-                syscall_exit(-1);
-            }
+          	
             f->eax = syscall_wait(args[1]);
 			break;
 		default:
@@ -198,7 +204,7 @@ int syscall_open(const char *file){
 	if (cur_file == NULL) {
 		return -1;
 	}
-	for (int i = 2; i < 128; i++) {
+	for (int i = 2; i < 130; i++) {
 		if (cur->fd_table[i] == NULL) {
 			 cur->fd_table[i] = cur_file;
 			 return i;
@@ -209,7 +215,7 @@ int syscall_open(const char *file){
 
 void syscall_close (int fd) {
 	struct thread *cur = thread_current();
-	if ( fd < 2 || fd >= 128) {
+	if ( fd < 2 || fd >= 130) {
 		return;
 	}
 	if (cur->fd_table[fd] != NULL) {
@@ -225,7 +231,7 @@ int syscall_write (int fd, const void *buffer, unsigned size){
 	if (fd == 1) { // STDOUT
 		putbuf(buffer, size);
 		return size;
-	} else if (fd >= 2 && fd < 128)  {
+	} else if (fd >= 2 && fd < 130)  {
 		struct file *file = cur->fd_table[fd];
 		    if (file == NULL)
             return -1;
@@ -248,7 +254,7 @@ int syscall_read (int fd, void *buffer, unsigned size){
 			putbuf(&buf[i], 1);
 		}
     	return size;
-	} else if (fd >= 2 && fd < 128) {
+	} else if (fd >= 2 && fd < 130) {
 		if(cur->fd_table[fd] != NULL){
 			struct file *file = cur->fd_table[fd];
 			int bytes_read = file_read(file, buffer, size);
@@ -264,7 +270,7 @@ bool syscall_remove(const char *file_name){
 
 int syscall_filesize(int fd){
 	struct thread *cur = thread_current();
-	if (fd >= 2 && fd < 128) {
+	if (fd >= 2 && fd < 130) {
 		struct file *file = cur->fd_table[fd];
 		if(file != NULL){
 			return file_length(file);
@@ -275,7 +281,7 @@ int syscall_filesize(int fd){
 
 void syscall_seek(int fd, unsigned position){
 	struct thread *cur = thread_current();
-	if (fd >= 2 && fd < 128) {
+	if (fd >= 2 && fd < 130) {
 		struct file *file = cur->fd_table[fd];
 		if(file != NULL){
 			unsigned file_len = file_length(file);
@@ -291,7 +297,7 @@ void syscall_seek(int fd, unsigned position){
 
 unsigned syscall_tell(int fd){
 	struct thread *cur = thread_current();
-	if (fd >= 2 && fd < 128) {
+	if (fd >= 2 && fd < 130) {
 		struct file *file = cur->fd_table[fd];
 		if(file != NULL){
 			return file_tell(file);
