@@ -101,7 +101,6 @@ struct thread {
 
     /* Owned by thread.c. */
 	struct parent_child {
-		struct thread *thread;
 		tid_t tid;
 		int exit_status;
 		int alive_count;

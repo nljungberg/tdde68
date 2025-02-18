@@ -58,6 +58,7 @@ static bool valid_user_buffer(const void *buffer, unsigned size){
 	for (unsigned i = 0; i < size; i++) {
 		if(!is_user_vaddr(buf + i)) return false;
 	}
+	if((!is_valid_user_ptr(buf))) return false;
 	return true;
 }
 
