@@ -54,9 +54,9 @@ static bool valid_user_string (const char *str) {
 
 static bool valid_user_buffer(const void *buffer, unsigned size){
 	char *buf = (char *) buffer;
-	if (buf == NULL) return false; 
+	if(!is_valid_user_ptr(buf)) return false;
 	for (unsigned i = 0; i < size; i++) {
-		if(!is_valid_user_ptr(buf + i)) return false;
+		if(!is_user_vaddr(buf + i)) return false;
 	}
 	return true;
 }
@@ -165,7 +165,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
 		case SYS_EXEC:
-             const char *cmd_line = (const char*) args[1];
+            const char *cmd_line = (const char*) args[1];
 			if (!valid_user_string(cmd_line)) {
 				syscall_exit(-1);
 			}
