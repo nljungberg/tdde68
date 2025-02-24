@@ -52,15 +52,53 @@ static bool valid_user_string (const char *str) {
     }
 }
 
-static bool valid_user_buffer(const void *buffer, unsigned size){
-	char *buf = (char *) buffer;
-	if(!is_valid_user_ptr(buf)) return false;
-	for (unsigned i = 0; i < size; i++) {
-		if(!is_user_vaddr(buf + i)) return false;
-	}
-	if((!is_valid_user_ptr(buf))) return false;
-	return true;
+static int
+get_user (const uint8_t *uaddr)
+{
+  int result;
+  asm ("movl $1f, %0\n"
+       "1:\tmovzbl %1, %0\n"
+       "movl %0, %0\n"
+       "1:" : "=&a" (result) : "m" (*uaddr));
+  return result;
 }
+
+
+/* Check that the user address range [uaddr, uaddr + size) is below PHYS_BASE
+   and mapped in the current process pagedir. */
+bool
+valid_user_buffer(const void *uaddr, size_t size)
+{
+  if (uaddr == NULL) return false;
+  char *start = (char *)uaddr;
+  char *end   = start + size;
+
+  // Quick top/bottom check
+  if (!is_user_vaddr(start) || (size > 0 && !is_user_vaddr(end - 1)))
+    return false;
+
+  // Check each page in [start, end)
+  for (char *page = pg_round_down(start); page < end; page += PGSIZE)
+    {
+      if (pagedir_get_page(thread_current()->pagedir, page) == NULL)
+        return false;
+    }
+  return true;
+}
+
+int safe_get_int(const void *uaddr) {
+  int value;
+  for (size_t i = 0; i < sizeof(int); i++) {
+    int byte = get_user((uint8_t *)uaddr + i);
+    if (byte < 0)
+      syscall_exit(-1);
+    ((uint8_t *)&value)[i] = byte;
+  }
+  return value;
+}
+
+
+
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
@@ -70,14 +108,14 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 	int *args = (int *) f->esp;
 
 	int syscall_nr = args[0];
-	
+
 
 	switch (syscall_nr) {
 		case SYS_WRITE:
 			void *buf = (void*) args[2];
 			unsigned size = args[3];
-            
-			if(!valid_user_buffer(buf, size)){ 
+
+			if(!valid_user_buffer(buf, size)){
 				syscall_exit(-1);
 			}
 			f->eax = syscall_write(args[1], buf, size);
@@ -122,22 +160,22 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			f->eax = syscall_read(fd, buffer, args[3]);
 			/* code */
 			break;
-		
+
 
 		case SYS_SLEEP:
-            
+
 			syscall_sleep(args[1]);
 			/* code */
 			break;
 
 		case SYS_SEEK:
-    
+
 			syscall_seek(args[1], args[2]);
 			/* code */
 			break;
 
 		case SYS_TELL:
-            
+
 			f->eax = syscall_tell(args[1]);
 			/* code */
 			break;
@@ -166,6 +204,9 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
 		case SYS_EXEC:
+            if (!valid_user_buffer(f->esp, 2 * sizeof(int))) {
+                syscall_exit(-1);
+            }
             const char *cmd_line = (const char*) args[1];
 			if (!valid_user_string(cmd_line)) {
 				syscall_exit(-1);
@@ -174,7 +215,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
         case SYS_WAIT:
-          	
+
             f->eax = syscall_wait(args[1]);
 			break;
 		default:
