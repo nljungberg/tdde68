@@ -54,20 +54,13 @@ static bool valid_user_string (const char *str) {
 
 /* Check that the user address range [uaddr, uaddr + size) is below PHYS_BASE
    and mapped in the current process pagedir. */
-bool valid_user_buffer(const void *uaddr, size_t size) {
-  if (uaddr == NULL) return false;
-  char *start = (char *)uaddr;
-  char *end   = start + size;
-
-  if (!is_user_vaddr(start) || (size > 0 && !is_user_vaddr(end - 1)))
-    return false;
-
-  char *page_end = pg_round_down(end - 1) + PGSIZE;
-  for (char *page = pg_round_down(start); page < page_end; page += PGSIZE) {
-    if (pagedir_get_page(thread_current()->pagedir, page) == NULL)
-      return false;
-  }
-  return true;
+static bool valid_user_buffer(const void *buffer, unsigned size){
+	char *buf = (char *) buffer;
+	if (buf == NULL) return false; 
+	for (unsigned i = 0; i < size; i++) {
+		if(!is_valid_user_ptr(buf + i)) return false;
+	}
+	return true;
 }
 
 
