@@ -101,7 +101,6 @@ struct thread {
 
     /* Owned by thread.c. */
 	struct parent_child {
-		struct thread *thread;
 		tid_t tid;
 		int exit_status;
 		int alive_count; // 2if both child and parent are alive, 1 if parent is alive 0 if both are killed 

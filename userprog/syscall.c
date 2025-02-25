@@ -52,18 +52,6 @@ static bool valid_user_string (const char *str) {
     }
 }
 
-static int
-get_user (const uint8_t *uaddr)
-{
-  int result;
-  asm ("movl $1f, %0\n"
-       "1:\tmovzbl %1, %0\n"
-       "movl %0, %0\n"
-       "1:" : "=&a" (result) : "m" (*uaddr));
-  return result;
-}
-
-
 /* Check that the user address range [uaddr, uaddr + size) is below PHYS_BASE
    and mapped in the current process pagedir. */
 bool valid_user_buffer(const void *uaddr, size_t size) {
@@ -71,11 +59,9 @@ bool valid_user_buffer(const void *uaddr, size_t size) {
   char *start = (char *)uaddr;
   char *end   = start + size;
 
-  // Check that buffer is in user space
   if (!is_user_vaddr(start) || (size > 0 && !is_user_vaddr(end - 1)))
     return false;
 
-  // Check each byte's page exists
   char *page_end = pg_round_down(end - 1) + PGSIZE;
   for (char *page = pg_round_down(start); page < page_end; page += PGSIZE) {
     if (pagedir_get_page(thread_current()->pagedir, page) == NULL)
@@ -83,19 +69,6 @@ bool valid_user_buffer(const void *uaddr, size_t size) {
   }
   return true;
 }
-
-int safe_get_int(const void *uaddr) {
-  int value;
-  for (size_t i = 0; i < sizeof(int); i++) {
-    int byte = get_user((uint8_t *)uaddr + i);
-    if (byte < 0)
-      syscall_exit(-1);
-    ((uint8_t *)&value)[i] = byte;
-  }
-  return value;
-}
-
-
 
 
 static void syscall_handler(struct intr_frame* f UNUSED)
