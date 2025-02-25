@@ -463,8 +463,8 @@ static void init_thread(struct thread* t, const char* name, int priority)
 	t->stack = (uint8_t *) t + PGSIZE;
 	t->priority = priority;
 	t->magic = THREAD_MAGIC;
-    list_init (&t->children);     //  thread starts with an empty children list.
-  	t->pc = NULL;                 //  thread link to its parent's record, if any
+    list_init (&t->children);     //  thread starts with an empty children list
+  	t->pc = NULL;                 //  thread link to its parent record if any
 
 	old_level = intr_disable();
 	list_push_back(&all_list, &t->allelem);

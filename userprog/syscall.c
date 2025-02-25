@@ -313,12 +313,12 @@ unsigned syscall_tell(int fd){
 }
 
 void syscall_exit(int status){
-	    for (int i=2; i<130; i++){
+	for (int i=2; i<130; i++){
         syscall_close(i);
     }
 
     struct thread *t = thread_current();
-    if(t->pc != NULL){
+    if(t->pc != NULL){ // tells parent it is going kill itself now
 		t->pc->exit_status = status;
 		sema_up(&t->pc->exit_sema);
 

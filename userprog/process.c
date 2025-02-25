@@ -68,10 +68,10 @@ tid_t process_execute(const char* cmd_line)
 
 	pc->exit_status = 0;
 	pc->alive_count = 2; // both parent and child alive
-	 sema_init (&pc->exit_sema, 0);
+	sema_init (&pc->exit_sema, 0);
 
 
-    H->p_child = pc; // Assign the parent_child structure to the helper
+    H->p_child = pc; // Assign the parent_child struct to the helper
     tid = thread_create(cmd_line, PRI_DEFAULT, start_process, H);
 
     if (tid == TID_ERROR) {
@@ -216,9 +216,7 @@ static void start_process(void* aux)
 int process_wait(tid_t child_tid UNUSED)
 {
 	struct thread *cur = thread_current();
-    for (struct list_elem *e = list_begin(&cur->children);
-             e != list_end(&cur->children);
-             e = list_next(e))
+    for (struct list_elem *e = list_begin(&cur->children); e != list_end(&cur->children); e = list_next(e))
     {
 		struct parent_child *cur_pc = list_entry(e, struct parent_child, elem);
         if (cur_pc->tid == child_tid) {
