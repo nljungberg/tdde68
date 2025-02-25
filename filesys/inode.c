@@ -3,6 +3,7 @@
 #include "filesys/filesys.h"
 #include "filesys/free-map.h"
 #include "threads/malloc.h"
+#include "threads/synch.h"
 
 #include <debug.h>
 #include <list.h>
@@ -21,6 +22,12 @@ struct inode_disk {
 	uint32_t unused[125]; /* Not used. */
 };
 
+struct write_read_lock{
+	int read_count;
+	struct lock write_lock;
+	struct lock mutex;
+}
+
 /* Returns the number of sectors to allocate for an inode SIZE
 	bytes long. */
 static inline size_t bytes_to_sectors(off_t size)
@@ -35,6 +42,7 @@ struct inode {
 	int open_cnt;				/* Number of openers. */
 	bool removed;				/* True if deleted, false otherwise. */
 	struct inode_disk data; /* Inode content. */
+	struct write_read_lock wrl;
 };
 
 /* Returns the block device sector that contains byte offset POS
@@ -54,10 +62,17 @@ static block_sector_t byte_to_sector(const struct inode* inode, off_t pos)
 	returns the same `struct inode'. */
 static struct list open_inodes;
 
+void init_rw_lock(struct write_read_lock *rwl){
+	lock_init(&rwl->mutex);
+	lock_init(&rwl->write_lock);
+	rwl->read_count = 0;
+}
+
 /* Initializes the inode module. */
 void inode_init(void)
 {
 	list_init(&open_inodes);
+	init_rw_lock(&wrl);
 }
 
 /* Initializes an inode with LENGTH bytes of data and
