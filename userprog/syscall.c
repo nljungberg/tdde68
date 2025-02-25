@@ -66,23 +66,21 @@ get_user (const uint8_t *uaddr)
 
 /* Check that the user address range [uaddr, uaddr + size) is below PHYS_BASE
    and mapped in the current process pagedir. */
-bool
-valid_user_buffer(const void *uaddr, size_t size)
-{
+bool valid_user_buffer(const void *uaddr, size_t size) {
   if (uaddr == NULL) return false;
   char *start = (char *)uaddr;
   char *end   = start + size;
 
-  // Quick top/bottom check
+  // Check that buffer is in user space
   if (!is_user_vaddr(start) || (size > 0 && !is_user_vaddr(end - 1)))
     return false;
 
-  // Check each page in [start, end)
-  for (char *page = pg_round_down(start); page < end; page += PGSIZE)
-    {
-      if (pagedir_get_page(thread_current()->pagedir, page) == NULL)
-        return false;
-    }
+  // Check each byte's page exists
+  char *page_end = pg_round_down(end - 1) + PGSIZE;
+  for (char *page = pg_round_down(start); page < page_end; page += PGSIZE) {
+    if (pagedir_get_page(thread_current()->pagedir, page) == NULL)
+      return false;
+  }
   return true;
 }
 
@@ -102,9 +100,9 @@ int safe_get_int(const void *uaddr) {
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
-	if (!is_valid_user_ptr(f->esp)) {
-        syscall_exit(-1);
-    }
+	if (!valid_user_buffer(f->esp, 4 * sizeof(int)))
+    	syscall_exit(-1);
+
 	int *args = (int *) f->esp;
 
 	int syscall_nr = args[0];
@@ -197,7 +195,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
 		case SYS_EXIT:
-            if (!is_valid_user_ptr(&args[1])) {
+            if (!valid_user_buffer(&args[1], 2*sizeof(int))) {
                 syscall_exit(-1);
             }
 			syscall_exit(args[1]);
