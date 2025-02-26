@@ -297,7 +297,9 @@ void syscall_seek(int fd, unsigned position){
 			if (position > file_len) {
 				position = file_len;
 			}
+
 			file_seek(file, position);
+
 		}
 	}
 	return;
@@ -306,13 +308,14 @@ void syscall_seek(int fd, unsigned position){
 
 unsigned syscall_tell(int fd){
 	struct thread *cur = thread_current();
+	unsigned tell = 0;
 	if (fd >= 2 && fd < 130) {
 		struct file *file = cur->fd_table[fd];
 		if(file != NULL){
-			return file_tell(file);
+			tell = file_tell(file);
 		}
 	}
-	return 0;
+	return tell;
 }
 
 void syscall_exit(int status){

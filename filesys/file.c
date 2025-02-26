@@ -2,6 +2,7 @@
 
 #include "filesys/inode.h"
 #include "threads/malloc.h"
+#include "threads/synch.h"
 
 #include <debug.h>
 
@@ -9,6 +10,8 @@
 struct file {
 	struct inode* inode; /* File's inode. */
 	off_t pos;				/* Current position. */
+	struct lock cursor_lock;
+
 };
 
 /* Opens a file for the given INODE, of which it takes ownership,
@@ -18,6 +21,7 @@ struct file* file_open(struct inode* inode)
 {
 	struct file* file = calloc(1, sizeof *file);
 	if (inode != NULL && file != NULL) {
+		lock_init(&file->cursor_lock);
 		file->inode = inode;
 		file->pos = 0;
 		return file;
@@ -112,7 +116,12 @@ void file_seek(struct file* file, off_t new_pos)
 {
 	ASSERT(file != NULL);
 	ASSERT(new_pos >= 0);
+		lock_acquire(&file->cursor_lock);
+
 	file->pos = new_pos;
+		lock_release(&file->cursor_lock);
+
+	
 }
 
 /* Returns the current position in FILE as a byte offset from the
@@ -120,5 +129,10 @@ void file_seek(struct file* file, off_t new_pos)
 off_t file_tell(struct file* file)
 {
 	ASSERT(file != NULL);
-	return file->pos;
+	lock_acquire(&file->cursor_lock);
+	off_t pos = file->pos;
+		lock_release(&file->cursor_lock);
+	return pos;
+
+
 }
