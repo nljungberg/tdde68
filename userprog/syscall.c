@@ -90,6 +90,9 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			break;
 
 		case SYS_CLOSE:
+            if (!valid_user_buffer(&args[1], sizeof(int))) {
+                syscall_exit(-1);
+            }
 			syscall_close(args[1]);
 			/* code */
 			break;
@@ -225,7 +228,7 @@ int syscall_open(const char *file){
 void syscall_close (int fd) {
 	struct thread *cur = thread_current();
 	if ( fd < 2 || fd >= 130) {
-		return;
+		syscall_exit(-1);
 	}
 	if (cur->fd_table[fd] != NULL) {
 		file_close(cur->fd_table[fd]);

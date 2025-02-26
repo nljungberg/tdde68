@@ -24,7 +24,7 @@ struct inode_disk {
 
 struct write_read_lock{
 	int read_count;
-	struct lock write_lock;
+	struct semaphore write_sema;
 	struct lock read_lock;
 };
 
@@ -65,7 +65,7 @@ static struct lock inode_list_lock;
 
 void init_rw_lock(struct write_read_lock *rwl) {
 	lock_init(&rwl->read_lock);
-	lock_init(&rwl->write_lock);
+	sema_init(&rwl->write_sema, 1);
 	rwl->read_count = 0;
 }
 
@@ -79,7 +79,8 @@ void inode_init(void)
 void new_reader(struct write_read_lock* wrl){
 	lock_acquire(&wrl->read_lock);
 	if(wrl->read_count == 0){
-		lock_acquire(&wrl->write_lock);
+		sema_down(&wrl->write_sema);
+
 	}
 	wrl->read_count ++;
 	lock_release(&wrl->read_lock);
@@ -89,20 +90,19 @@ void close_reader(struct write_read_lock* wrl){
 	lock_acquire(&wrl->read_lock);
 	wrl->read_count --;
 	if(wrl->read_count == 0){
-		lock_release(&wrl->write_lock);
+		sema_up(&wrl->write_sema);
 	}
 	lock_release(&wrl->read_lock);
 }
 
 void new_writer(struct write_read_lock* wrl){
-	lock_acquire(&wrl->write_lock);
-	lock_acquire(&wrl->read_lock);
+    sema_down(&wrl->write_sema);
 }
 
 void close_writer(struct write_read_lock* wrl){
-	lock_release(&wrl->write_lock);
-	lock_release(&wrl->read_lock);
+    sema_up(&wrl->write_sema);
 }
+
 
 /* Initializes an inode with LENGTH bytes of data and
 	writes the new inode to sector SECTOR on the file system
