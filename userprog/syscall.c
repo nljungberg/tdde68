@@ -66,10 +66,33 @@ static bool valid_user_buffer(const void *buffer, unsigned size){
 	return true;
 }
 
+static int
+get_user (const uint8_t *uaddr)
+{
+  int result;
+  asm ("movl $1f, %0\n"
+       "1:\tmovzbl %1, %0\n"
+       "movl %0, %0\n"
+       "1:" : "=&a" (result) : "m" (*uaddr));
+  return result;
+}
+
+
+int safe_get_int(const void *uaddr) {
+  int value;
+  for (size_t i = 0; i < sizeof(int); i++) {
+    int byte = get_user((uint8_t *)uaddr + i);
+    if (byte < 0)
+      syscall_exit(-1);
+    ((uint8_t *)&value)[i] = byte;
+  }
+  return value;
+}
+
 
 static void syscall_handler(struct intr_frame* f UNUSED)
 {
-	if (!valid_user_buffer(f->esp, 4 * sizeof(int)))
+	if (!valid_user_buffer(f->esp, 1 * sizeof(int)))
     	syscall_exit(-1);
 
 	int *args = (int *) f->esp;
@@ -79,24 +102,28 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 
 	switch (syscall_nr) {
 		case SYS_WRITE:
+			if (!valid_user_buffer(f->esp  ,4  * sizeof(int))) syscall_exit(-1);
 			void *buf = (void*) args[2];
 			unsigned size = args[3];
 
-			if(!valid_user_buffer(buf, size)){
-				syscall_exit(-1);
-			}
-			f->eax = syscall_write(args[1], buf, size);
+			if (!valid_user_buffer(buf, size)) syscall_exit(-1);
+
+			
+			f->eax = syscall_write(args[1], buf,size);
 			/* code */
 			break;
 
 		case SYS_CLOSE:
-            if (!valid_user_buffer(&args[1], sizeof(int))) {
-                syscall_exit(-1);
-            }
-			syscall_close(args[1]);
+			if(!is_valid_user_ptr(&args[1])) syscall_exit(-1);
+			if (!valid_user_buffer(f->esp + 4, sizeof(int)))
+    			syscall_exit(-1);
+			int fds = safe_get_int(&args[1]);
+			syscall_close(fds);
 			/* code */
 			break;
 		case SYS_CREATE:
+			if (!valid_user_buffer(f->esp, 3 * sizeof(int)))
+    			syscall_exit(-1);
             const char *file_name_ = (const char*) args[1];
         	unsigned  size_ = args[2];
 			if (!valid_user_string(file_name_)) {
@@ -112,6 +139,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			break;
 
 		case SYS_OPEN:
+			
             const char *file = (const char*) args[1];
         	if (!valid_user_string(file)) {
             	syscall_exit(-1);
@@ -189,6 +217,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
             f->eax = syscall_wait(args[1]);
 			break;
 		default:
+			syscall_exit(-1);
 			break;
 		}
 }
@@ -233,8 +262,7 @@ void syscall_close (int fd) {
 	if (cur->fd_table[fd] != NULL) {
 		file_close(cur->fd_table[fd]);
 		cur->fd_table[fd] = NULL;
-	}
-	return;
+	} 
 }
 
 int syscall_write (int fd, const void *buffer, unsigned size){
