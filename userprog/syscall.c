@@ -243,6 +243,7 @@ int syscall_open(const char *file){
 	struct thread *cur = thread_current();
 	struct file *cur_file = filesys_open(file);
 	if (cur_file == NULL) {
+		file_close(cur_file);
 		return -1;
 	}
 	for (int i = 2; i < 130; i++) {

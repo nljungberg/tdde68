@@ -276,9 +276,12 @@ tid_t thread_tid(void)
 void thread_exit(void)
 {
 	ASSERT(!intr_context());
+	/*struct thread *cur_t = thread_current();
+	sema_up(&cur_t->pc->exit_sema);*/
+
+	process_exit();
 
 #ifdef USERPROG
-	process_exit();
 
 	struct thread *cur = thread_current();
 	for (int i = 2; i < 130; i++) {
@@ -288,6 +291,8 @@ void thread_exit(void)
 	}
 	
 #endif
+
+
 	/* Remove thread from all threads list, set our status to dying,
 		and schedule another process.  That process will destroy us
 		when it calls thread_schedule_tail(). */

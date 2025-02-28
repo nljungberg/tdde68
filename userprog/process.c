@@ -86,6 +86,7 @@ tid_t process_execute(const char* cmd_line)
     sema_down(&H->load_sema);
     if(H->load_success == false){
         free(H);
+		free(pc);
         return -1;
     }
     free(H);
