@@ -213,7 +213,7 @@ static void syscall_handler(struct intr_frame* f UNUSED)
 			/* code */
 			break;
         case SYS_WAIT:
-
+			if(!valid_user_buffer(f->esp, 2 *sizeof(int))) return syscall_exit(-1);
             f->eax = syscall_wait(args[1]);
 			break;
 		default:
