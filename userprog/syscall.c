@@ -252,6 +252,7 @@ int syscall_open(const char *file){
 			 return i;
 		}
 	}
+	file_close(cur_file);
 	return -1;
 }
 

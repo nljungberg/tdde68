@@ -470,7 +470,7 @@ static void init_thread(struct thread* t, const char* name, int priority)
 	t->magic = THREAD_MAGIC;
     list_init (&t->children);     //  thread starts with an empty children list
   	t->pc = NULL;                 //  thread link to its parent record if any
-
+	memset(t->fd_table, 0, sizeof(t->fd_table));
 	old_level = intr_disable();
 	list_push_back(&all_list, &t->allelem);
 	intr_set_level(old_level);
