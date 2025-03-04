@@ -37,9 +37,10 @@ bool free_map_allocate(size_t cnt, block_sector_t* sectorp)
 		bitmap_set_multiple(free_map, sector, cnt, false);
 		sector = BITMAP_ERROR;
 	}
+	lock_release(&memory_lock);
+
 	if (sector != BITMAP_ERROR)
 		*sectorp = sector;
-	lock_release(&memory_lock);
 	return sector != BITMAP_ERROR;
 }
 
