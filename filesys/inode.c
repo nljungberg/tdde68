@@ -62,6 +62,7 @@ static block_sector_t byte_to_sector(const struct inode* inode, off_t pos)
 	returns the same `struct inode'. */
 static struct list open_inodes;
 static struct lock inode_list_lock;
+static struct lock create_lock;
 
 void init_rw_lock(struct write_read_lock *rwl) {
 	lock_init(&rwl->read_lock);
@@ -74,6 +75,7 @@ void inode_init(void)
 {
 	list_init(&open_inodes);
 	lock_init(&inode_list_lock);
+	lock_init(&create_lock);
 }
 
 void new_reader(struct write_read_lock* wrl){
@@ -111,6 +113,7 @@ void close_writer(struct write_read_lock* wrl){
 	Returns false if memory or disk allocation fails. */
 bool inode_create(block_sector_t sector, off_t length)
 {
+	lock_acquire(&create_lock);
 	struct inode_disk* disk_inode = NULL;
 	bool success = false;
 
@@ -138,7 +141,7 @@ bool inode_create(block_sector_t sector, off_t length)
 		}
 		free(disk_inode);
 	}
-
+	lock_release(&create_lock);
 	return success;
 }
 

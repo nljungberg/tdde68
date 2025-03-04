@@ -116,10 +116,10 @@ void file_seek(struct file* file, off_t new_pos)
 {
 	ASSERT(file != NULL);
 	ASSERT(new_pos >= 0);
-		lock_acquire(&file->cursor_lock);
+		//lock_acquire(&file->cursor_lock);
 
 	file->pos = new_pos;
-		lock_release(&file->cursor_lock);
+		//lock_release(&file->cursor_lock);
 
 	
 }
@@ -129,9 +129,9 @@ void file_seek(struct file* file, off_t new_pos)
 off_t file_tell(struct file* file)
 {
 	ASSERT(file != NULL);
-	lock_acquire(&file->cursor_lock);
+	//lock_acquire(&file->cursor_lock);
 	off_t pos = file->pos;
-		lock_release(&file->cursor_lock);
+	//lock_release(&file->cursor_lock);
 	return pos;
 
 
