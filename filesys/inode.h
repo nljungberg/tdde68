@@ -21,5 +21,6 @@ off_t inode_read_at(struct inode*, void*, off_t size, off_t offset);
 off_t inode_write_at(struct inode*, const void*, off_t size, off_t offset);
 off_t inode_length(const struct inode*);
 
+struct lock * inode_dir_lock(struct inode *inode);
 
 #endif /* filesys/inode.h */

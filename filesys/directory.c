@@ -3,6 +3,7 @@
 #include "filesys/filesys.h"
 #include "filesys/inode.h"
 #include "threads/malloc.h"
+#include "threads/synch.h"
 
 #include <list.h>
 #include <stdio.h>
@@ -26,16 +27,24 @@ struct dir_entry {
 bool dir_create(block_sector_t sector, size_t entry_cnt)
 {
 	return inode_create(sector, entry_cnt * sizeof(struct dir_entry));
+	
 }
 
 /* Opens and returns the directory for the given INODE, of which
 	it takes ownership.  Returns a null pointer on failure. */
 struct dir* dir_open(struct inode* inode)
 {
+	
+
 	struct dir* dir = calloc(1, sizeof *dir);
+
 	if (inode != NULL && dir != NULL) {
+		lock_acquire(inode_dir_lock(inode));
+
 		dir->inode = inode;
 		dir->pos = 0;
+lock_release(inode_dir_lock(inode));
+
 		return dir;
 	}
 	else {
@@ -82,6 +91,7 @@ struct inode* dir_get_inode(struct dir* dir)
 static bool
 	 lookup(const struct dir* dir, const char* name, struct dir_entry* ep, off_t* ofsp)
 {
+
 	struct dir_entry e;
 	size_t ofs;
 
@@ -139,6 +149,8 @@ bool dir_add(struct dir* dir, const char* name, block_sector_t inode_sector)
 		return false;
 
 	/* Check that NAME is not in use. */
+		lock_acquire(inode_dir_lock(dir->inode));
+
 	if (lookup(dir, name, NULL, NULL))
 		goto done;
 
@@ -161,6 +173,8 @@ bool dir_add(struct dir* dir, const char* name, block_sector_t inode_sector)
 	success = inode_write_at(dir->inode, &e, sizeof e, ofs) == sizeof e;
 
 done:
+	lock_release(inode_dir_lock(dir->inode));
+
 	return success;
 }
 
@@ -169,6 +183,7 @@ done:
 	which occurs only if there is no file with the given NAME. */
 bool dir_remove(struct dir* dir, const char* name)
 {
+
 	struct dir_entry e;
 	struct inode* inode = NULL;
 	bool success = false;
@@ -176,7 +191,7 @@ bool dir_remove(struct dir* dir, const char* name)
 
 	ASSERT(dir != NULL);
 	ASSERT(name != NULL);
-
+lock_acquire(inode_dir_lock(dir->inode));
 	/* Find directory entry. */
 	if (!lookup(dir, name, &e, &ofs))
 		goto done;
@@ -196,6 +211,8 @@ bool dir_remove(struct dir* dir, const char* name)
 	success = true;
 
 done:
+	lock_release(inode_dir_lock(dir->inode));
+
 	inode_close(inode);
 	return success;
 }

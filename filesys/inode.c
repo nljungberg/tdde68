@@ -43,6 +43,7 @@ struct inode {
 	bool removed;				/* True if deleted, false otherwise. */
 	struct inode_disk data; /* Inode content. */
 	struct write_read_lock wrl;
+	struct lock dir_lock;
 };
 
 /* Returns the block device sector that contains byte offset POS
@@ -62,7 +63,6 @@ static block_sector_t byte_to_sector(const struct inode* inode, off_t pos)
 	returns the same `struct inode'. */
 static struct list open_inodes;
 static struct lock inode_list_lock;
-static struct lock create_lock;
 
 void init_rw_lock(struct write_read_lock *rwl) {
 	lock_init(&rwl->read_lock);
@@ -70,12 +70,15 @@ void init_rw_lock(struct write_read_lock *rwl) {
 	rwl->read_count = 0;
 }
 
+struct lock * inode_dir_lock(struct inode *inode) {
+  return &inode->dir_lock;
+}
+
 /* Initializes the inode module. */
 void inode_init(void)
 {
 	list_init(&open_inodes);
 	lock_init(&inode_list_lock);
-	lock_init(&create_lock);
 }
 
 void new_reader(struct write_read_lock* wrl){
@@ -113,7 +116,6 @@ void close_writer(struct write_read_lock* wrl){
 	Returns false if memory or disk allocation fails. */
 bool inode_create(block_sector_t sector, off_t length)
 {
-	lock_acquire(&create_lock);
 	struct inode_disk* disk_inode = NULL;
 	bool success = false;
 
@@ -141,7 +143,6 @@ bool inode_create(block_sector_t sector, off_t length)
 		}
 		free(disk_inode);
 	}
-	lock_release(&create_lock);
 	return success;
 }
 
@@ -172,6 +173,7 @@ struct inode* inode_open(block_sector_t sector)
 	/* Initialize. */
 	list_push_front(&open_inodes, &inode->elem);
 	init_rw_lock(&inode->wrl);
+	lock_init(&inode->dir_lock);
 	inode->sector = sector;
 	inode->open_cnt = 1;
 	inode->removed = false;
