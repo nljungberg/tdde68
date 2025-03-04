@@ -357,12 +357,8 @@ void syscall_exit(int status){
     }
 
     struct thread *t = thread_current();
-    if(t->pc != NULL){ // tells parent it is going kill itself now
-		t->pc->exit_status = status;
-		sema_up(&t->pc->exit_sema);
-		t->pc->alive_count--;
-    }
-
+	t->status_holder = status;
+	cur->pc->exit_status = status;
 	printf("%s: exit(%d)\n", t->name, t->pc->exit_status);
     thread_exit();
 }

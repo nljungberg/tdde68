@@ -276,8 +276,6 @@ tid_t thread_tid(void)
 void thread_exit(void)
 {
 	ASSERT(!intr_context());
-	/*struct thread *cur_t = thread_current();
-	sema_up(&cur_t->pc->exit_sema);*/
 
 	process_exit();
 

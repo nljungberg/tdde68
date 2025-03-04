@@ -241,6 +241,11 @@ void process_exit(void)
 	struct thread* cur = thread_current();
 	uint32_t* pd;
 
+	if(cur->pc != NULL){ // tells parent it is going kill itself now
+		sema_up(&cur->pc->exit_sema);
+		cur->pc->alive_count--;
+    }
+
 	/* Destroy the current process's page directory and switch back
 		to the kernel-only page directory. */
 	pd = cur->pagedir;
