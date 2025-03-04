@@ -243,6 +243,7 @@ int syscall_open(const char *file){
 	struct thread *cur = thread_current();
 	struct file *cur_file = filesys_open(file);
 	if (cur_file == NULL) {
+		file_close(cur_file);
 		return -1;
 	}
 	for (int i = 2; i < 130; i++) {
@@ -251,6 +252,7 @@ int syscall_open(const char *file){
 			 return i;
 		}
 	}
+	file_close(cur_file);
 	return -1;
 }
 
@@ -350,17 +352,10 @@ unsigned syscall_tell(int fd){
 }
 
 void syscall_exit(int status){
-	for (int i=2; i<130; i++){
-        syscall_close(i);
-    }
-
     struct thread *t = thread_current();
     if(t->pc != NULL){ // tells parent it is going kill itself now
 		t->pc->exit_status = status;
-		sema_up(&t->pc->exit_sema);
-		t->pc->alive_count--;
     }
-
 	printf("%s: exit(%d)\n", t->name, t->pc->exit_status);
     thread_exit();
 }

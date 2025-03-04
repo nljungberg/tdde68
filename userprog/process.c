@@ -86,6 +86,7 @@ tid_t process_execute(const char* cmd_line)
     sema_down(&H->load_sema);
     if(H->load_success == false){
         free(H);
+		free(pc);
         return -1;
     }
     free(H);
@@ -240,6 +241,9 @@ void process_exit(void)
 	struct thread* cur = thread_current();
 	uint32_t* pd;
 
+	sema_up(&cur->pc->exit_sema);
+	cur->pc->alive_count--;
+	
 	/* Destroy the current process's page directory and switch back
 		to the kernel-only page directory. */
 	pd = cur->pagedir;
